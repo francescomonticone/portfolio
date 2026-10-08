@@ -1,0 +1,83 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --ease-emphasis: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: #0a0a0f;
+  color: #e4e4e7;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Gradient name shimmer — verified 3s linear infinite on reference */
+@keyframes shimmer-gradient {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+.text-gradient-shimmer {
+  background: linear-gradient(90deg, #00a3ff, #22d3ee, #00a3ff);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer-gradient 3s linear infinite;
+}
+
+/* Radar sweep — rotazione conica fluida, niente blink */
+@keyframes radar-sweep {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.radar-sweep {
+  background: conic-gradient(from 0deg, rgba(0, 163, 255, 0.9), transparent 28%);
+  animation: radar-sweep 2.8s linear infinite;
+}
+
+/* Marquee bands — direction left, seamless -50% loop, pause on hover */
+@keyframes marquee-left {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee-left var(--marquee-duration, 30s) linear infinite;
+}
+.marquee-paused:hover .marquee-track {
+  animation-play-state: paused;
+}
+
+/* Map attribution: minimal, blended with the design (Esri requires it) */
+.leaflet-control-attribution {
+  font-size: 9px !important;
+  line-height: 1.4 !important;
+  padding: 1px 6px !important;
+  border-radius: 9999px 0 0 0;
+  background: rgba(10, 10, 15, 0.55) !important;
+  color: #71717a !important;
+}
+.leaflet-control-attribution a {
+  color: #71717a !important;
+}
+
+::selection {
+  background: #7dd3fc;
+  color: #0a0a0f;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track,
+  .text-gradient-shimmer {
+    animation: none;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}
