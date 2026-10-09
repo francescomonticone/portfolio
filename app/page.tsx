@@ -6,14 +6,16 @@ import { Memoji, Photo, CursorGlow } from "@/components/media";
 import { SatelliteMap } from "@/components/map";
 import { LiquidButton, GlassFilter } from "@/components/ui/liquid-glass-button";
 import { ContactForm } from "@/components/contact-form";
-import { HorizontalProjects, MinorProjects } from "@/components/horizontal-projects";
+import { HorizontalProjects, MinorProjects, NowBuilding } from "@/components/horizontal-projects";
 import { SkillsSection } from "@/components/skills/SkillScene";
 import {
   education,
   experience,
   navLinks,
+  personalTrack,
   profile,
   promptChips,
+  semesterCourses,
   techTags,
 } from "@/lib/content";
 
@@ -239,42 +241,60 @@ export default function Home() {
               </div>
             </Reveal>
             <Reveal delay={0.16}>
-              <div className="flex h-full items-center gap-3 rounded-bento border border-line bg-card p-4">
-                <span className="relative flex h-3 w-3">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sky-400 opacity-75" />
-                  <span className="relative inline-flex h-3 w-3 rounded-full bg-sky-500" />
-                </span>
-                <p className="text-[15px] text-ink">
-                  Open to SWE / AI / security internships <span className="text-muted">— Italy / remote</span>
-                </p>
-              </div>
-            </Reveal>
-          </div>
-          {/* ── Profilo professionale + mappa ── */}
-          <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-4">
-            <Reveal className="col-span-1">
               <div className="flex h-full flex-col justify-between rounded-bento border border-line bg-card p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">Now learning</p>
-                <ul className="mt-3 flex flex-col gap-2">
-                  {["LLMs & AI systems", "AI security", "Advanced OS"].map((s) => (
-                    <li key={s} className="rounded-full bg-white/[0.03] px-4 py-1.5 text-[13px] text-ink">
-                      {s}
-                    </li>
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">This semester</p>
+                <ul className="mt-2 flex flex-col gap-1 text-[13px] text-ink">
+                  {semesterCourses.map((c) => (
+                    <li key={c.name}>{c.name}</li>
                   ))}
                 </ul>
               </div>
             </Reveal>
-            <Reveal delay={0.08} className="col-span-1">
-              <div className="flex h-full flex-col justify-between rounded-bento border border-line bg-card p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">How I work</p>
-                <ul className="mt-3 flex flex-col gap-2 text-[13px] text-muted">
-                  <li><span className="text-ink">Fundamentals first</span> — principles before tools.</li>
-                  <li><span className="text-ink">Learn by building</span> — ideas into working software.</li>
-                  <li><span className="text-ink">Always improving</span> — new tech, stronger theory.</li>
-                </ul>
+          </div>
+          {/* ── Now learning: Academic + Personal ── */}
+          <div className="mt-4 rounded-bento border border-line bg-card p-4 md:p-5">
+            <Reveal>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">Now learning</p>
+              <div className="mt-4 grid grid-cols-1 gap-5 md:grid-cols-2">
+                <div>
+                  <p className="text-sm font-semibold text-ink">Academic — this semester</p>
+                  <div className="mt-3 flex flex-col gap-3">
+                    {semesterCourses.map((c) => (
+                      <div key={c.name}>
+                        <p className="text-[15px] font-medium text-ink">{c.name}</p>
+                        <div className="mt-1.5 flex flex-wrap gap-1.5">
+                          {c.tags.map((t) => (
+                            <span key={t} className="rounded-full border border-line bg-carddeep px-3 py-1 text-xs font-medium text-muted">
+                              {t}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-ink">Personal track</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {personalTrack.map((s) => (
+                      <span key={s} className="rounded-full bg-white/[0.03] px-4 py-1.5 text-[13px] text-ink">
+                        {s}
+                      </span>
+                    ))}
+                  </div>
+                  <p className="mt-4 text-sm font-semibold text-ink">How I work</p>
+                  <ul className="mt-2 flex flex-col gap-1.5 text-[13px] text-muted">
+                    <li><span className="text-ink">Fundamentals first</span> — principles before tools.</li>
+                    <li><span className="text-ink">Learn by building</span> — ideas into working software.</li>
+                    <li><span className="text-ink">Always improving</span> — new tech, stronger theory.</li>
+                  </ul>
+                </div>
               </div>
             </Reveal>
-            <Reveal delay={0.16} className="col-span-2">
+          </div>
+          {/* ── Mappa ── */}
+          <div className="mt-4">
+            <Reveal>
               <div className="relative h-full min-h-[180px] overflow-hidden rounded-bento border border-line bg-card">
                 <SatelliteMap />
                 <div className="absolute bottom-3 left-3 z-10 rounded-full border border-line bg-carddeep/90 px-4 py-1.5 text-xs font-semibold text-ink backdrop-blur">
@@ -306,6 +326,9 @@ export default function Home() {
         <HorizontalProjects />
         <div className="mt-24">
           <MinorProjects />
+        </div>
+        <div className="mt-16">
+          <NowBuilding />
         </div>
 
         {/* ── Skills: 3D su desktop, chip su mobile ── */}

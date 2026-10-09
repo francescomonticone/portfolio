@@ -3,7 +3,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { Eyebrow, Reveal } from "@/components/motion";
-import { minorProjects, projects } from "@/lib/content";
+import { minorProjects, nowBuilding, projects } from "@/lib/content";
 
 /** Carosello foto: cambia ogni 4s con crossfade, pausa on-hover, primo frame se reduced-motion. */
 function PhotoCarousel({ title, photos, logo }: { title: string; photos: string[]; logo?: string }) {
@@ -212,7 +212,46 @@ function ProjectCard({
   );
 }
 
-/** Progettini minori: griglia compatta sotto i featured. */
+/** In lavorazione adesso: AirDocs e futuri work-in-progress. */
+export function NowBuilding() {
+  return (
+    <section className="mx-auto w-full max-w-[1190px] px-5 md:px-12">
+      <Reveal>
+        <Eyebrow>Work in progress</Eyebrow>
+        <h2 className="mt-2 text-3xl font-bold tracking-tight md:text-4xl">
+          Now <span className="text-muted">building</span>
+        </h2>
+      </Reveal>
+      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {nowBuilding.map((p, i) => (
+          <Reveal key={p.title} delay={(i % 2) * 0.08}>
+            <article className="relative h-full overflow-hidden rounded-bento border border-primary/30 bg-card p-5">
+              <div
+                aria-hidden
+                className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-[#00a3ff]/10 blur-3xl"
+              />
+              <div className="relative">
+                <span className="inline-flex items-center gap-2 rounded-full bg-primary/15 px-3 py-1 text-xs font-semibold text-primary">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
+                  In progress
+                </span>
+                <h3 className="mt-3 text-lg font-bold tracking-tight">{p.title}</h3>
+                <p className="mt-1 text-sm leading-relaxed text-muted">{p.description}</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {p.stack.map((s) => (
+                    <span key={s} className="rounded-full border border-line bg-carddeep px-3 py-1 text-xs font-medium text-muted">
+                      {s}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </article>
+          </Reveal>
+        ))}
+      </div>
+    </section>
+  );
+}
 export function MinorProjects() {
   return (
     <section className="mx-auto w-full max-w-[1190px] px-5 md:px-12">

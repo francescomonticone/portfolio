@@ -48,24 +48,25 @@ export type Project = {
 export const projects: Project[] = [
   {
     id: "01",
-    type: "Personal Project",
-    title: "PoliMi T2A Study Plan",
-    stack: ["TypeScript", "React", "AI-assisted"],
+    type: "Academic Project",
+    title: "MESOS Board Game",
+    stack: ["Java", "Maven", "Team of 4"],
     description:
-      "Interactive planner for a Computer Science & Engineering Master's study plan: course combinations, constraint checking and student-oriented course info. Independent project — not an official Politecnico di Milano application.",
-    points: ["Course selection", "Constraint checking", "Compatible combinations"],
-    codePublic: true,
-    academic: false,
+      "Software implementation of a board game with object-oriented design, testing and collaborative development practices.",
+    points: ["OOP design", "Testing", "Team workflow"],
+    codePublic: false,
+    academic: true,
     photos: [],
+    // TODO(mesos): foto in arrivo in public/project_foto/mesos/
   },
   {
     id: "02",
     type: "Real-world Project",
     title: "Healthcare Desktop App",
-    stack: ["Tauri", "React", "Rust", "SQLCipher"],
+    stack: ["Tauri", "React", "Rust", "Windows"],
     description:
-      "Cross-platform desktop app for healthcare professionals: patient evaluations, assessment parameters over time, PDF reports and Excel export with secure SQLCipher storage.",
-    points: ["Evaluations", "PDF + Excel export", "Secure storage"],
+      "Offline-first Windows desktop app for healthcare professionals: patient evaluations, assessment parameters over time, PDF reports and Excel export, with automatic updates via GitHub Actions.",
+    points: ["Offline-first", "Auto-update via GitHub Actions", "PDF + Excel export"],
     codePublic: false,
     academic: false,
     photos: [
@@ -103,30 +104,6 @@ export const projects: Project[] = [
   },
   {
     id: "05",
-    type: "Academic Project",
-    title: "MESOS Board Game",
-    stack: ["Java", "Maven", "Team of 4"],
-    description:
-      "Software implementation of a board game with object-oriented design, testing and collaborative development practices.",
-    points: ["OOP design", "Testing", "Team workflow"],
-    codePublic: false,
-    academic: true,
-    photos: [],
-  },
-  {
-    id: "06",
-    type: "Personal Project",
-    title: "AirDocs",
-    stack: ["Swift", "macOS", "Vision"],
-    description:
-      "Hands-free macOS interaction via hand tracking: Vision + AVFoundation landmarks, pinch-based cursor control with smoothing and dead zones.",
-    points: ["Hand landmarks", "Pinch control", "Smoothing"],
-    codePublic: true,
-    academic: false,
-    photos: [],
-  },
-  {
-    id: "07",
     type: "Personal Project",
     title: "PomoGP",
     stack: ["Web App", "F1 Telemetry"],
@@ -138,7 +115,7 @@ export const projects: Project[] = [
     photos: ["/project_foto/pomoGP/pomoGP-screenshot.png"],
   },
   {
-    id: "08",
+    id: "06",
     type: "Academic Project",
     title: "ROS 2 Odometry",
     stack: ["ROS 2", "C++", "TF", "RViz2"],
@@ -151,6 +128,22 @@ export const projects: Project[] = [
       "/project_foto/ROS2-odometry-for-Bunker-Pro/odometry-rviz-1.png",
       "/project_foto/ROS2-odometry-for-Bunker-Pro/odometry-rviz-2.png",
     ],
+  },
+];
+
+/** Progetti in corso: sezione "Now building" sotto i minors. */
+export const nowBuilding: Project[] = [
+  {
+    id: "W1",
+    type: "Work in progress",
+    title: "AirDocs",
+    stack: ["Swift", "macOS", "Vision"],
+    description:
+      "Hands-free macOS interaction via hand tracking: Vision + AVFoundation landmarks, pinch-based cursor control with smoothing and dead zones.",
+    points: ["Hand landmarks", "Pinch control", "Smoothing"],
+    codePublic: true,
+    academic: false,
+    photos: [],
   },
 ];
 
@@ -198,12 +191,29 @@ export type MinorProject = {
 /** Progettini minori: per aggiungerne uno, basta appendere qui. */
 export const minorProjects: MinorProject[] = [
   {
+    title: "PoliMi T2A Study Plan",
+    stack: ["TypeScript", "React"],
+    description:
+      "Interactive planner for a CSE Master's study plan: course combinations and constraint checking. Independent project — not an official Politecnico di Milano application.",
+    // TODO(t2a): foto dal post LinkedIn + link al post quando arriva.
+  },  {
     title: "Hardware Task-List Module",
     stack: ["VHDL", "FPGA", "FSM"],
     description:
       "VHDL module managing an ordered task list in external RAM — FSMs for insert, remove, priority and clear, verified in Vivado.",
   },
 ];
+
+export const semesterCourses = [
+  { name: "Advanced Operating Systems", tags: ["Real-time scheduling", "Concurrency & IPC", "Device drivers"] },
+  { name: "Foundations of Artificial Intelligence", tags: ["Search & A*", "Games", "CSP", "Logic & planning"] },
+  { name: "Software Engineering 2", tags: ["RASD & UML", "Alloy modeling", "V&V & testing"] },
+  { name: "Databases 2", tags: ["NoSQL", "Distributed DB", "Query optimization"] },
+  { name: "Formal Languages and Compilers", tags: ["Automata", "Grammars", "Parsing"] },
+  { name: "Foundations of Operations Research", tags: ["Linear programming", "Simplex", "Optimization"] },
+];
+
+export const personalTrack = ["LLMs & AI systems", "AI security", "CUDA & parallel computing"];
 
 export const exploreCards = [
   { title: "Experience", text: "Tutoring, internship and real-world software work.", href: "#other" },
