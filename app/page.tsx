@@ -307,7 +307,7 @@ export default function Home() {
         </section>
 
         {/* ── Tag strip marquee ─────────────── */}
-        <div className="mb-20 mt-16 md:mb-28">
+        <div className="my-16 md:my-24">
           <Marquee duration="22s" label="Tech strip">
             {techTags.concat(techTags).map((t, i) => (
               // eslint-disable-next-line @next/next/no-img-element

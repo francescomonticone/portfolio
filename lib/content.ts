@@ -43,6 +43,7 @@ export type Project = {
   academic: boolean;
   photos: string[];
   logo?: string;
+  repo?: string;
 };
 
 export const projects: Project[] = [
@@ -54,10 +55,16 @@ export const projects: Project[] = [
     description:
       "Software implementation of a board game with object-oriented design, testing and collaborative development practices.",
     points: ["OOP design", "Testing", "Team workflow"],
-    codePublic: false,
+    codePublic: true,
     academic: true,
-    photos: [],
-    // TODO(mesos): foto in arrivo in public/project_foto/mesos/
+    photos: [
+      "/project_foto/mesos/start_screen.png",
+      "/project_foto/mesos/uml_model.png",
+      "/project_foto/mesos/uml_other.png",
+      "/project_foto/mesos/seq_join_game.png",
+      "/project_foto/mesos/seq_pick_card.png",
+    ],
+    repo: "https://github.com/francescomonticone/Mesos",
   },
   {
     id: "02",
@@ -67,7 +74,7 @@ export const projects: Project[] = [
     description:
       "Offline-first Windows desktop app for healthcare professionals: patient evaluations, assessment parameters over time, PDF reports and Excel export, with automatic updates via GitHub Actions.",
     points: ["Offline-first", "Auto-update via GitHub Actions", "PDF + Excel export"],
-    codePublic: false,
+    codePublic: true,
     academic: false,
     photos: [
       "/project_foto/health1.png",
@@ -75,6 +82,7 @@ export const projects: Project[] = [
       "/project_foto/health3.png",
       "/project_foto/health4.png",
     ],
+    repo: "https://github.com/francescomonticone/Salute-e-Benessere-Updates",
     // TODO(healthcare-logo): file logo non trovato in public/ — aggiungi es.
     // logo: "/project_foto/salute-benessere/logo.png",
   },
@@ -86,9 +94,10 @@ export const projects: Project[] = [
     description:
       "Dynamic route optimizer on a hexagonal grid with weighted graphs and Dijkstra, Min Heap priority queue and Hash Table caching for repeated queries.",
     points: ["Hex grid", "Min Heap", "Query caching"],
-    codePublic: false,
+    codePublic: true,
     academic: true,
     photos: [],
+    repo: "https://github.com/francescomonticone/progetto-api-2024-2025",
   },
   {
     id: "04",
@@ -98,9 +107,10 @@ export const projects: Project[] = [
     description:
       "Full 2D mapping and autonomous navigation pipeline: occupancy grids from bag files, AMCL, costmaps, DWB controller and a custom C++ NavigateToPose goal publisher in Stage + RViz2.",
     points: ["SLAM maps", "Nav2 stack", "Custom C++ node"],
-    codePublic: false,
+    codePublic: true,
     academic: true,
     photos: ["/project_foto/ROS2-mapping-and-navigation/Screenshots/map.png", "/project_foto/ROS2-mapping-and-navigation/Screenshots/nav2_navigation.png"],
+    repo: "https://github.com/francescomonticone/ROS2-mapping-and-navigation",
   },
   {
     id: "05",
@@ -113,6 +123,7 @@ export const projects: Project[] = [
     codePublic: true,
     academic: false,
     photos: ["/project_foto/pomoGP/pomoGP-screenshot.png"],
+    repo: "https://github.com/francescomonticone/pomoGP",
   },
   {
     id: "06",
@@ -122,12 +133,13 @@ export const projects: Project[] = [
     description:
       "Odometry system for a skid-steering mobile robot: experimental wheel calibration against ground-truth TF data, trajectory error metrics.",
     points: ["Wheel calibration", "TF analysis", "Error metrics"],
-    codePublic: false,
+    codePublic: true,
     academic: true,
     photos: [
       "/project_foto/ROS2-odometry-for-Bunker-Pro/odometry-rviz-1.png",
       "/project_foto/ROS2-odometry-for-Bunker-Pro/odometry-rviz-2.png",
     ],
+    repo: "https://github.com/francescomonticone/ROS2-odometry-for-Bunker-Pro",
   },
 ];
 

@@ -5,6 +5,15 @@ import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion
 import { Eyebrow, Reveal } from "@/components/motion";
 import { minorProjects, nowBuilding, projects } from "@/lib/content";
 
+/** Marchio GitHub inline (nessuna dipendenza esterna). */
+function GithubIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden className={className}>
+      <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8Z" />
+    </svg>
+  );
+}
+
 /** Carosello foto: cambia ogni 4s con crossfade, pausa on-hover, primo frame se reduced-motion. */
 function PhotoCarousel({ title, photos, logo }: { title: string; photos: string[]; logo?: string }) {
   const [idx, setIdx] = useState(0);
@@ -100,8 +109,7 @@ export function HorizontalProjects() {
 
   const header = (
     <>
-      <Eyebrow>Portfolio</Eyebrow>
-      <h2 className="mt-2 text-4xl font-bold tracking-tight md:text-[60px] md:leading-[72px]">
+      <h2 className="text-4xl font-bold tracking-tight md:text-[60px] md:leading-[72px]">
         Featured <span className="text-muted">Projects</span>
       </h2>
       <p className="mt-3 max-w-[65ch] text-muted">
@@ -154,6 +162,7 @@ function ProjectCard({
   academic,
   photos,
   logo,
+  repo,
 }: {
   id: string;
   type: string;
@@ -165,6 +174,7 @@ function ProjectCard({
   academic: boolean;
   photos: string[];
   logo?: string;
+  repo?: string;
 }) {
   return (
     <article className="w-[84vw] shrink-0 overflow-hidden rounded-3xl border border-white/10 bg-card sm:w-[460px] lg:w-[540px]">
@@ -207,6 +217,17 @@ function ProjectCard({
             </span>
           ))}
         </div>
+        {repo && (
+          <a
+            href={repo}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-4 inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_32px_rgba(0,163,255,0.25)]"
+          >
+            <GithubIcon className="h-4 w-4" />
+            GitHub ↗
+          </a>
+        )}
       </div>
     </article>
   );
@@ -244,6 +265,17 @@ export function NowBuilding() {
                     </span>
                   ))}
                 </div>
+                {p.repo && (
+                  <a
+                    href={p.repo}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-3 inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_32px_rgba(0,163,255,0.25)]"
+                  >
+                    <GithubIcon className="h-4 w-4" />
+                    GitHub ↗
+                  </a>
+                )}
               </div>
             </article>
           </Reveal>
