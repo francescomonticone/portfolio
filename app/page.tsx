@@ -274,7 +274,7 @@ export default function Home() {
             <Reveal delay={0.08}>
               <div className="h-full rounded-bento border border-line bg-card p-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">University</p>
-                <p className="mt-2 text-[15px] leading-relaxed text-ink">Politecnico di Milano — BSc expected Sep 2026, MSc 2026–present.</p>
+                <p className="mt-2 text-[15px] leading-relaxed text-ink">Politecnico di Milano — BSc graduated 109/110, MSc 2026–present.</p>
               </div>
             </Reveal>
             <Reveal delay={0.08}>

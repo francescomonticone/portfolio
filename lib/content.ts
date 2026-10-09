@@ -182,8 +182,8 @@ export const experience = [
 
 export const education = [
   { school: "Politecnico di Milano", degree: "MSc Computer Science & Engineering", period: "2026 – Present" },
-  { school: "Politecnico di Milano", degree: "BSc Computer Engineering", period: "Expected September 2026" },
-  { school: "Liceo Scientifico Madonna della Neve", degree: "Scientific Diploma — 90/100", period: "Brescia" },
+  { school: "Politecnico di Milano", degree: "BSc Computer Engineering — 109/110", period: "2026" },
+  { school: "Liceo Scientifico Madonna della Neve", degree: "Scientific Diploma", period: "Brescia" },
 ];
 
 export const certifications = [

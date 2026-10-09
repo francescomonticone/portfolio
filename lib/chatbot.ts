@@ -530,7 +530,7 @@ export function answerQuestion(raw: string): ChatAnswer {
       case "education": {
         const list = education.map((e) => `${e.degree} (${e.period})`).join(" · ");
         return {
-          text: it ? `Studio al ${profile.university}: ${list}` : `I study at ${profile.university}: ${list}`,
+          text: it ? `I miei studi al ${profile.university}: ${list}` : `My education at ${profile.university}: ${list}`,
           links: [],
           suggestions: [...(it ? SUG.it.study : SUG.en.study)],
         };
