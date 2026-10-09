@@ -10,6 +10,7 @@ import { HorizontalProjects, MinorProjects, NowBuilding } from "@/components/hor
 import { SkillsSection } from "@/components/skills/SkillScene";
 import { answerQuestion } from "@/lib/chatbot";
 import type { ChatAnswer } from "@/lib/chatbot";
+import { GithubIcon } from "@/components/github-icon";
 import {
   education,
   experience,
@@ -169,34 +170,50 @@ export default function Home() {
                 <div className="mt-3 rounded-bento border border-line bg-card px-4 py-3">
                   <p className="text-[15px] text-ink">{answer.text}</p>
                   {answer.links.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {answer.links.map((l) => (
-                        <a
-                          key={l.href + l.label}
-                          href={l.href}
-                          target={l.href.startsWith("#") ? undefined : "_blank"}
-                          rel="noreferrer"
-                          className="rounded-full border border-line bg-carddeep px-3 py-1 text-xs font-semibold text-muted transition-colors hover:text-ink"
-                        >
-                          {l.label} ↗
-                        </a>
-                      ))}
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {answer.links.map((l) => {
+                        const isGh = l.href.includes("github.com");
+                        return (
+                          <a
+                            key={l.href + l.label}
+                            href={l.href}
+                            target={l.href.startsWith("#") ? undefined : "_blank"}
+                            rel="noreferrer"
+                            className={
+                              isGh
+                                ? "inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-bold text-black transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_24px_rgba(255,255,255,0.25)]"
+                                : "inline-flex items-center gap-1.5 rounded-full border border-line bg-carddeep px-4 py-2 text-xs font-semibold text-muted transition-colors hover:text-ink"
+                            }
+                          >
+                            {isGh && <GithubIcon className="h-4 w-4" />}
+                            {l.label}
+                            {!isGh && " ↗"}
+                          </a>
+                        );
+                      })}
                     </div>
                   )}
                   {answer.suggestions.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {answer.suggestions.map((s) => (
-                        <button
-                          key={s}
-                          onClick={() => {
-                            setQuery(s);
-                            runAsk(s);
-                          }}
-                          className="rounded-full bg-white/[0.03] px-3 py-1 text-xs text-faint transition-colors hover:text-ink"
-                        >
-                          {s}
-                        </button>
-                      ))}
+                    <div className="mt-3">
+                      <p className="text-right text-[11px] font-semibold uppercase tracking-[0.14em] text-faint">
+                        {/dimmi|mostrami|come|quali|cosa|dove/i.test(answer.suggestions[0])
+                          ? "Prova anche:"
+                          : "Try next:"}
+                      </p>
+                      <div className="mt-1.5 flex flex-wrap justify-end gap-2.5">
+                        {answer.suggestions.map((s) => (
+                          <button
+                            key={s}
+                            onClick={() => {
+                              setQuery(s);
+                              runAsk(s);
+                            }}
+                            className="rounded-full bg-primary px-4 py-2 text-xs font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_24px_rgba(0,163,255,0.3)]"
+                          >
+                            {s}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>

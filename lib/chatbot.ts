@@ -1,7 +1,7 @@
-import { education, experience, profile, projects, skillGroups, techTags } from "./content";
+import { certifications, education, experience, profile, projects, skillGroups, techTags } from "./content";
 
 /**
- * Keyword + intent engine for the portfolio chatbot.
+ * Keyword + intent engine for the portfolio chatbot (English + Italian).
  *
  * It separates two concerns:
  * - Intent: what the user wants (projects, skills, education, contact, ...)
@@ -9,7 +9,8 @@ import { education, experience, profile, projects, skillGroups, techTags } from 
  *
  * Matches are scored (specific phrases weigh more than generic words) and the
  * intent decides how entities are interpreted. All content is derived from
- * lib/content.ts, so there is a single source of truth.
+ * lib/content.ts, so there is a single source of truth. Answers stay short:
+ * details live behind GitHub buttons and follow-up suggestions.
  */
 
 export type Intent =
@@ -17,12 +18,17 @@ export type Intent =
   | "project_details"
   | "skills"
   | "education"
+  | "certifications"
   | "experience"
   | "contact"
   | "about"
   | "greeting"
+  | "thanks"
+  | "bye"
   | "help"
   | "unknown";
+
+export type Lang = "en" | "it";
 
 export interface ChatLink {
   label: string;
@@ -45,7 +51,7 @@ const TECH_ALIASES: Record<string, string[]> = {
   "react": ["react.js", "reactjs"],
   "next.js": ["nextjs", "next js", "next"],
   "tauri": [],
-  "ros 2": ["ros2", "ros", "robotics", "robot"],
+  "ros 2": ["ros2", "ros", "robotics", "robot", "robotica", "robotico"],
   "python": ["py"],
   "java": [],
   "javafx": ["java fx"],
@@ -59,8 +65,13 @@ const TECH_ALIASES: Record<string, string[]> = {
   "git": [],
   "swift": ["swiftui"],
   "f1 telemetry": ["f1", "telemetry", "formula 1"],
-  "graphs": ["graph", "dijkstra"],
-  "slam": [],
+  "graphs": ["graph", "dijkstra", "heap", "min heap"],
+  "slam": ["mapping"],
+  "rviz": ["rviz2"],
+  "amcl": [],
+  "nav2": [],
+  "windows": ["desktop app", "desktop"],
+  "pdf": ["reports", "report"],
 };
 
 const aliasToTech = new Map<string, string>();
@@ -96,9 +107,16 @@ function escapeRegExp(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-/** Lowercase, space-padded, punctuation stripped (keeps + # . / inside words). */
+/** Lowercase, accents folded, space-padded, punctuation stripped (keeps + # . /). */
 function normalize(raw: string): string {
-  let s = raw.toLowerCase().replace(/[^a-z0-9+#./\s]/g, " ");
+  let s = raw
+    .toLowerCase()
+    .replace(/[àáâä]/g, "a")
+    .replace(/[èéêë]/g, "e")
+    .replace(/[ìíîï]/g, "i")
+    .replace(/[òóôö]/g, "o")
+    .replace(/[ùúûü]/g, "u")
+    .replace(/[^a-z0-9+#./\s]/g, " ");
   s = s.replace(/\s+/g, " ").trim();
   for (const [from, to] of Object.entries(SYNONYMS)) {
     s = s.replace(new RegExp(`\\b${escapeRegExp(from)}\\b`, "g"), to);
@@ -106,13 +124,53 @@ function normalize(raw: string): string {
   return ` ${s} `;
 }
 
-/** Same normalization for haystacks (project fields): commas etc. become spaces. */
+/** Same normalization for haystacks (project fields), then alias expansion
+ *  so both sides speak canonical names. */
 function normHay(s: string): string {
-  return ` ${s.toLowerCase().replace(/[^a-z0-9+#./\s]/g, " ").replace(/\s+/g, " ").trim()} `;
+  let out = ` ${s
+    .toLowerCase()
+    .replace(/[àáâä]/g, "a")
+    .replace(/[èéêë]/g, "e")
+    .replace(/[ìíîï]/g, "i")
+    .replace(/[òóôö]/g, "o")
+    .replace(/[ùúûü]/g, "u")
+    .replace(/[^a-z0-9+#./\s]/g, " ")} `;
+  const keys = [...aliasToTech.keys()].sort((a, b) => b.length - a.length);
+  for (const key of keys) {
+    const re = new RegExp(`(?<![a-z0-9+#./])${escapeRegExp(key)}(?![a-z0-9+#./])`, "g");
+    out = out.replace(re, ` ${aliasToTech.get(key)} `);
+  }
+  return ` ${out.replace(/\s+/g, " ").trim()} `;
 }
 
 function hasTok(hay: string, tok: string): boolean {
   return hay.includes(` ${tok} `);
+}
+
+const IT_MARKERS = [
+  "che", "cosa", "come", "dove", "quando", "perche", "quale", "quali", "quanto",
+  "dimmi", "parlami", "raccontami", "fammi", "mio", "miei", "mia", "mie",
+  "tuo", "tua", "tuoi", "tue", "sei", "hai", "sono", "questo", "questa",
+  "grazie", "ciao", "buongiorno", "buonasera", "progetti", "progetto",
+  "competenze", "sai", "usi", "usato", "conosci", "studiato", "universita",
+  "laurea", "laureato", "lavoro", "esperienza", "tirocinio", "contatti",
+  "contattarti", "chi", "presentati",
+];
+
+const EN_MARKERS = [
+  "what", "where", "when", "how", "which", "tell", "show", "list", "does",
+  "your", "you", "thanks", "thank", "hello", "hi", "projects", "skills",
+  "about", "describe", "study", "work", "contact", "experience", "education",
+  "degree", "reach", "can", "use", "using", "know", "are",
+];
+
+/** Italian wins only on majority — ties and tech-only queries stay English. */
+function detectLang(text: string): Lang {
+  let it = 0;
+  let en = 0;
+  for (const m of IT_MARKERS) if (hasTok(text, m)) it += 1;
+  for (const m of EN_MARKERS) if (hasTok(text, m)) en += 1;
+  return it > en ? "it" : "en";
 }
 
 /** All tech entities mentioned in the query (canonical names). */
@@ -167,10 +225,23 @@ function scoreProjects(words: Set<string>, techs: string[]): { index: number; sc
   return hits.sort((a, b) => b.score - a.score);
 }
 
-/** Does the query name this project (one of its title words)? */
-function namesProject(query: Set<string>, i: number): boolean {
-  const tokens = projects[i].title.toLowerCase().split(/[\s&]+/).filter((t) => t.length > 2);
-  return tokens.some((t) => query.has(t));
+/** Extra ways to name a project (lowercase, matched as phrases). */
+const PROJECT_ALIASES: Record<string, string[]> = {
+  "MESOS Board Game": ["mesos game"],
+  "Healthcare Desktop App": ["healthcare app", "health app"],
+  "Dynamic Route Optimizer": ["route optimizer", "api project"],
+  "ROS 2 Mapping & Navigation": ["mapping project", "navigation project", "scout mini"],
+  "PomoGP": ["pomodoro", "pomodoro timer", "f1 timer", "focus timer"],
+  "ROS 2 Odometry": ["odometry project", "bunker"],
+};
+
+/** Does the query name this project (one of its title words or an alias)? */
+function namesProject(text: string, query: Set<string>, i: number): boolean {
+  const p = projects[i];
+  const tokens = p.title.toLowerCase().split(/[\s&]+/).filter((t) => t.length > 2);
+  if (tokens.some((t) => query.has(t))) return true;
+  const aliases = PROJECT_ALIASES[p.title] ?? [];
+  return aliases.some((a) => text.includes(` ${a} `));
 }
 
 interface IntentScore {
@@ -184,6 +255,8 @@ const INTENT_PATTERNS: { intent: Intent; phrases: [string, number][] }[] = [
     phrases: [
       ["tell me about", 4], ["what is", 3], ["describe", 3], ["details", 3],
       ["more about", 4], ["that project", 2],
+      ["dimmi", 3], ["parlami di", 4], ["raccontami", 3], ["cos e", 3],
+      ["dettagli", 3],
     ],
   },
   {
@@ -191,28 +264,43 @@ const INTENT_PATTERNS: { intent: Intent; phrases: [string, number][] }[] = [
     phrases: [
       ["which projects", 5], ["what projects", 5], ["show me", 3], ["list", 3],
       ["projects", 3], ["project", 2], ["portfolio", 2], ["built", 2], ["work", 1],
+      ["che progetti", 5], ["quali progetti", 5], ["mostrami", 3], ["elenca", 3],
+      ["progetti", 3], ["progetto", 2],
     ],
   },
   {
     intent: "skills",
     phrases: [
-      ["skills", 4], ["what do you know about", 4], ["do you know", 3],
-      ["familiar with", 3], ["stack", 3], ["technologies", 3], ["technology", 3],
+      ["skills", 4], ["what do you know about", 4], ["do you know", 3], ["do you use", 2],
+      ["familiar with", 3], ["proficient", 3], ["expert in", 3], ["tech stack", 4],
+      ["stack", 3], ["technologies", 3], ["technology", 3],
       ["languages", 3], ["language", 2], ["using", 1],
+      ["competenze", 4], ["sai usare", 3], ["conosci", 3], ["linguaggi", 3], ["tecnologie", 3],
     ],
   },
   {
     intent: "education",
     phrases: [
-      ["education", 5], ["where did you study", 5], ["university", 4],
+      ["education", 5], ["where did you study", 5], ["where do you study", 4],
+      ["university", 4], ["college", 4], ["graduated", 4],
       ["degree", 4], ["study", 3], ["student", 2],
+      ["dove hai studiato", 5], ["dove studi", 4], ["universita", 4],
+      ["laurea", 4], ["laureato", 4], ["studi", 3],
+    ],
+  },
+  {
+    intent: "certifications",
+    phrases: [
+      ["certifications", 5], ["certification", 4], ["certified", 4], ["toeic", 4],
+      ["certificazioni", 5], ["attestati", 3],
     ],
   },
   {
     intent: "experience",
     phrases: [
-      ["experience", 5], ["worked", 4], ["internship", 4], ["intern", 4],
-      ["job", 3], ["tutor", 3], ["where have you worked", 5],
+      ["experience", 5], ["worked", 4], ["worked as", 4], ["internship", 4], ["intern", 4],
+      ["job", 3], ["tutor", 3], ["career", 3], ["where have you worked", 5],
+      ["esperienza", 5], ["hai lavorato", 4], ["tirocinio", 4], ["carriera", 3],
     ],
   },
   {
@@ -220,21 +308,34 @@ const INTENT_PATTERNS: { intent: Intent; phrases: [string, number][] }[] = [
     phrases: [
       ["how can i reach you", 5], ["get in touch", 5], ["contact", 4],
       ["email", 4], ["hire", 3], ["linkedin", 4], ["github", 2],
+      ["come posso contattarti", 5], ["contatti", 4], ["contattarti", 4],
     ],
   },
   {
     intent: "about",
     phrases: [
       ["about you", 5], ["about yourself", 5], ["who are you", 5], ["yourself", 3],
+      ["who made", 4], ["who built", 4], ["who created", 4],
+      ["where are you from", 4], ["where do you live", 4], ["location", 3],
+      ["introduce yourself", 5],
+      ["chi sei", 5], ["presentati", 4], ["di dove sei", 4], ["dove vivi", 4],
     ],
+  },
+  {
+    intent: "thanks",
+    phrases: [["thank you", 5], ["thanks", 4], ["thx", 3], ["grazie", 4]],
+  },
+  {
+    intent: "bye",
+    phrases: [["goodbye", 4], ["bye", 4], ["see you", 4], ["good night", 3], ["arrivederci", 4]],
   },
 ];
 
 function scoreIntents(text: string): IntentScore[] {
-  if (/^\s*(hi|hello|hey|ciao|yo)\b/.test(text.trim())) {
+  if (/^\s*(hi|hello|hey|ciao|yo|good morning|good afternoon|good evening|buongiorno|buonasera)\b/.test(text.trim())) {
     return [{ intent: "greeting", score: 10 }];
   }
-  if (text.includes(" help ") || text.includes(" what can you ")) {
+  if (text.includes(" help ") || text.includes(" what can you ") || text.includes(" what can i ask ") || text.includes(" aiuto ") || text.includes(" cosa posso chiedere ")) {
     return [{ intent: "help", score: 10 }];
   }
   const scores = INTENT_PATTERNS.map(({ intent, phrases }) => {
@@ -245,6 +346,12 @@ function scoreIntents(text: string): IntentScore[] {
     return { intent, score };
   });
   return scores.sort((a, b) => b.score - a.score);
+}
+
+/** One line per project — details live behind the GitHub buttons. */
+function compactLine(i: number): string {
+  const p = projects[i];
+  return `${p.title} (${p.stack.slice(0, 3).join(", ")})`;
 }
 
 function projectLine(i: number): string {
@@ -263,41 +370,86 @@ function projectsUsing(tech: string): number[] {
     .map((h) => h.index);
 }
 
+function isKnownSkill(tech: string): boolean {
+  return [...aliasToTech.values()].some((v) => v.toLowerCase() === tech);
+}
+
+const SUG = {
+  en: {
+    def: ["Show me your projects", "What are your skills?", "How can I reach you?"],
+    proj: ["Which projects use C++?", "What do you know about Rust?", "How can I reach you?"],
+    tech: ["Tell me about MESOS", "What are your skills?", "Where did you study?"],
+    study: ["What are your skills?", "Show me your projects", "How can I reach you?"],
+  },
+  it: {
+    def: ["Mostrami i tuoi progetti", "Quali sono le tue competenze?", "Come posso contattarti?"],
+    proj: ["Quali progetti usano C++?", "Cosa sai di Rust?", "Come posso contattarti?"],
+    tech: ["Dimmi di MESOS", "Quali sono le tue competenze?", "Dove hai studiato?"],
+    study: ["Quali sono le tue competenze?", "Mostrami i tuoi progetti", "Come posso contattarti?"],
+  },
+} as const;
+
 export function answerQuestion(raw: string): ChatAnswer {
   const text = normalize(raw);
   if (!text.trim()) {
-    return { text: "Ask me anything — try one of the suggestions below.", links: [], suggestions: defaultSuggestions() };
+    return {
+      text: "Ask me anything — try one of the suggestions below.",
+      links: [],
+      suggestions: [...SUG.en.def],
+    };
   }
+  const lang: Lang = detectLang(text);
+  const it = lang === "it";
   const words = queryWords(text);
   const techs = findTechs(text);
   const hits = scoreProjects(words, techs);
   const [top] = scoreIntents(text);
   const confident = top.score >= 4;
 
-  // 1. Greeting / help have priority.
+  // 1. Greeting / thanks / bye / help have priority.
   if (top.intent === "greeting") {
     return {
-      text: `Hi! I'm ${profile.firstName} — ${profile.tagline} Ask me about my projects, skills, education or how to contact me.`,
+      text: it
+        ? `Ciao! Sono ${profile.firstName}. Chiedimi dei miei progetti, competenze, studi o contatti.`
+        : `Hi! I'm ${profile.firstName}. Ask me about my projects, skills, education or contact.`,
       links: [],
-      suggestions: ["Show me your projects", "What do you know about Rust?", "Where did you study?"],
+      suggestions: [...(it ? SUG.it.def : SUG.en.def)],
+    };
+  }
+  if (top.intent === "thanks") {
+    return {
+      text: it ? "Prego! Altro? Progetti, competenze o contatti." : "You're welcome! Anything else — projects, skills or contact?",
+      links: [],
+      suggestions: [...(it ? SUG.it.def : SUG.en.def)],
+    };
+  }
+  if (top.intent === "bye") {
+    return {
+      text: it ? "Ciao e grazie! A presto." : "Goodbye! Feel free to come back with more questions.",
+      links: [],
+      suggestions: [it ? "Come posso contattarti?" : "How can I reach you?"],
     };
   }
   if (top.intent === "help") {
     return {
-      text: "I can answer questions about my projects (e.g. MESOS, PomoGP), my skills (e.g. Rust, Java, ROS 2), my education, my experience and how to contact me.",
+      text: it
+        ? "Rispondo su progetti (es. MESOS, PomoGP), competenze (es. Rust, Java, ROS 2), studi, esperienza e contatti."
+        : "I answer about projects (e.g. MESOS, PomoGP), skills (e.g. Rust, Java, ROS 2), education, experience and contact.",
       links: [],
-      suggestions: defaultSuggestions(),
+      suggestions: [...(it ? SUG.it.def : SUG.en.def)],
     };
   }
 
   // 2. The query names a project -> its details.
-  const named = hits.filter((h) => namesProject(words, h.index));
+  const named = hits.filter((h) => namesProject(text, words, h.index));
   if (named.length > 0 && (!confident || top.intent === "projects" || top.intent === "project_details")) {
-    const techList = techs.length ? ` It involves ${techs.join(", ")}.` : "";
+    const involves = techs.length
+      ? it ? ` Coinvolge: ${techs.join(", ")}.` : ` Involves: ${techs.join(", ")}.`
+      : "";
     return {
-      text: `${projectLine(named[0].index)}${techList}`,
+      text: `${projectLine(named[0].index)}${involves}`,
       links: projectLinks(named[0].index),
-      suggestions: ["Which projects use C++?", "What do you know about Rust?", "How can I reach you?"],
+      suggestions: [...(it ? SUG.it.proj : SUG.en.proj)],
     };
   }
 
@@ -306,12 +458,18 @@ export function answerQuestion(raw: string): ChatAnswer {
     const tech = techs[0];
     const users = projectsUsing(tech);
     const where = users.length
-      ? ` I use it in ${users.map((i) => projects[i].title).join(", ")}.`
+      ? it
+        ? ` Usato in: ${users.map((i) => projects[i].title).join(", ")}.`
+        : ` Used in: ${users.map((i) => projects[i].title).join(", ")}.`
       : "";
     return {
-      text: `Yes — ${tech} is part of my stack.${where}`,
+      text: it ? `Sì, ${tech} è tra le mie competenze.${where}` : `Yes — ${tech} is in my stack.${where}`,
       links: users.slice(0, 2).flatMap(projectLinks),
-      suggestions: [`Which projects use ${tech}?`, "What are your skills?", "Tell me about MESOS"],
+      suggestions: [
+        it ? `Quali progetti usano ${tech}?` : `Which projects use ${tech}?`,
+        it ? "Quali sono le tue competenze?" : "What are your skills?",
+        it ? "Dimmi di MESOS" : "Tell me about MESOS",
+      ],
     };
   }
 
@@ -325,19 +483,32 @@ export function answerQuestion(raw: string): ChatAnswer {
         return techs.every((t) => hasTok(hay, t));
       });
     if (matching.length > 0) {
-      const list = matching.map((i) => projectLine(i)).join(" ");
+      const list = matching.map((i) => compactLine(i)).join(" · ");
       return {
         text: techs.length > 1
-          ? `Projects involving ${techs.join(" and ")}: ${list}`
-          : `Here's where ${techs[0]} shows up: ${list}`,
+          ? `${techs.join(" + ")}: ${list}`
+          : `${techs[0]}: ${list}`,
         links: matching.flatMap(projectLinks),
-        suggestions: ["Tell me about MESOS", "What are your skills?", "Where did you study?"],
+        suggestions: [...(it ? SUG.it.tech : SUG.en.tech)],
+      };
+    }
+    if (techs.every(isKnownSkill)) {
+      return {
+        text: it
+          ? `Sì, ${techs.join(", ")} è tra le mie competenze, ma nessun progetto in evidenza lo usa.`
+          : `Yes — ${techs.join(", ")} is in my stack, but no featured project highlights it.`,
+        links: [],
+        suggestions: [...(it ? SUG.it.def : SUG.en.def)],
       };
     }
     return {
-      text: `I don't have a project combining ${techs.join(" and ")}. Try a single technology instead.`,
+      text: it
+        ? `Non ho progetti che combinano ${techs.join(" e ")}. Prova con una sola tecnologia.`
+        : `I don't have a project combining ${techs.join(" and ")}. Try a single technology.`,
       links: [],
-      suggestions: techs.map((t) => `Which projects use ${t}?`).concat("Show me your projects"),
+      suggestions: techs
+        .map((t) => (it ? `Quali progetti usano ${t}?` : `Which projects use ${t}?`))
+        .concat(it ? "Mostrami i tuoi progetti" : "Show me your projects"),
     };
   }
 
@@ -345,52 +516,79 @@ export function answerQuestion(raw: string): ChatAnswer {
   if (confident) {
     switch (top.intent) {
       case "skills": {
-        const all = skillGroups.map((g) => `${g.title}: ${g.items.join(", ")}`).join(" ");
+        const all = skillGroups.map((g) => `${g.title}: ${g.items.join(", ")}`).join(" · ");
         return {
-          text: `My skills — ${all}`,
-          links: [{ label: "Skills section", href: "#skills" }],
-          suggestions: ["What do you know about Rust?", "Which projects use C++?", "Where did you study?"],
+          text: all,
+          links: [{ label: it ? "Sezione competenze" : "Skills section", href: "#skills" }],
+          suggestions: [
+            it ? "Cosa sai di Rust?" : "What do you know about Rust?",
+            it ? "Quali progetti usano C++?" : "Which projects use C++?",
+            it ? "Dove hai studiato?" : "Where did you study?",
+          ],
         };
       }
       case "education": {
-        const list = education.map((e) => `${e.degree} @ ${e.school} (${e.period})`).join(" ");
+        const list = education.map((e) => `${e.degree} (${e.period})`).join(" · ");
         return {
-          text: `I study at ${profile.university}: ${list}`,
+          text: it ? `Studio al ${profile.university}: ${list}` : `I study at ${profile.university}: ${list}`,
           links: [],
-          suggestions: ["What are your skills?", "Show me your projects", "How can I reach you?"],
+          suggestions: [...(it ? SUG.it.study : SUG.en.study)],
+        };
+      }
+      case "certifications": {
+        return {
+          text: certifications.join(" · "),
+          links: [],
+          suggestions: [
+            it ? "Dove hai studiato?" : "Where did you study?",
+            it ? "Quali sono le tue competenze?" : "What are your skills?",
+            it ? "Mostrami i tuoi progetti" : "Show me your projects",
+          ],
         };
       }
       case "experience": {
-        const list = experience.map((e) => `${e.role} @ ${e.org} (${e.period}): ${e.text}`).join(" ");
+        const list = experience.map((e) => `${e.role} @ ${e.org} (${e.period})`).join(" · ");
         return {
-          text: `My experience: ${list}`,
+          text: list,
           links: [],
-          suggestions: ["Show me your projects", "What are your skills?", "How can I reach you?"],
+          suggestions: [...(it ? SUG.it.study : SUG.en.study)],
         };
       }
       case "contact": {
         return {
-          text: "You can reach me via GitHub and LinkedIn below — I'm open to internships and collaborations.",
+          text: it
+            ? "Contattami via GitHub o LinkedIn qui sotto — sono aperto a stage e collaborazioni."
+            : "Reach me via GitHub and LinkedIn below — I'm open to internships and collaborations.",
           links: [
             { label: "GitHub", href: "https://github.com/francescomonticone" },
-            { label: "Contact section", href: "#contact" },
+            { label: it ? "Sezione contatti" : "Contact section", href: "#contact" },
           ],
-          suggestions: ["Tell me about MESOS", "What are your skills?", "Where did you study?"],
+          suggestions: [
+            it ? "Dimmi di MESOS" : "Tell me about MESOS",
+            it ? "Quali sono le tue competenze?" : "What are your skills?",
+            it ? "Dove hai studiato?" : "Where did you study?",
+          ],
         };
       }
       case "about": {
         return {
-          text: `I'm ${profile.name}, ${profile.role} @ ${profile.university}. ${profile.tagline}`,
+          text: it
+            ? `Sono ${profile.name}, ${profile.role} al ${profile.university}. Vivo in Italia.`
+            : `I'm ${profile.name}, ${profile.role} @ ${profile.university}, based in ${profile.location}.`,
           links: [],
-          suggestions: ["Show me your projects", "What are your skills?", "How can I reach you?"],
+          suggestions: [...(it ? SUG.it.def : SUG.en.def)],
         };
       }
       case "projects": {
         const list = projects.map((p) => p.title).join(", ");
         return {
-          text: `My featured projects: ${list}. Ask me about any of them for details.`,
+          text: it ? `I miei progetti: ${list}.` : `My featured projects: ${list}.`,
           links: projects.filter((p) => p.repo).map((p) => ({ label: p.title, href: p.repo! })),
-          suggestions: ["Tell me about MESOS", "Which projects use C++?", "What do you know about Rust?"],
+          suggestions: [
+            it ? "Dimmi di MESOS" : "Tell me about MESOS",
+            it ? "Quali progetti usano C++?" : "Which projects use C++?",
+            it ? "Cosa sai di Rust?" : "What do you know about Rust?",
+          ],
         };
       }
       default:
@@ -400,9 +598,11 @@ export function answerQuestion(raw: string): ChatAnswer {
 
   // 6. Controlled fallback: never invent, always redirect.
   return {
-    text: "I don't have enough data to answer that. I can tell you about my projects, skills, education, experience or how to contact me.",
+    text: it
+      ? "Non ho abbastanza dati per rispondere. Posso parlarti di progetti, competenze, studi, esperienza o contatti."
+      : "I don't have enough data to answer that. I can tell you about my projects, skills, education, experience or contact.",
     links: [],
-    suggestions: defaultSuggestions(),
+    suggestions: [...(it ? SUG.it.def : SUG.en.def)],
   };
 }
 
