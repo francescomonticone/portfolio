@@ -186,6 +186,8 @@ export type MinorProject = {
   title: string;
   stack: string[];
   description: string;
+  photo?: string;
+  link?: { label: string; href: string };
 };
 
 /** Progettini minori: per aggiungerne uno, basta appendere qui. */
@@ -195,7 +197,8 @@ export const minorProjects: MinorProject[] = [
     stack: ["TypeScript", "React"],
     description:
       "Interactive planner for a CSE Master's study plan: course combinations and constraint checking. Independent project — not an official Politecnico di Milano application.",
-    // TODO(t2a): foto dal post LinkedIn + link al post quando arriva.
+    photo: "/project_foto/t2a-study-plan/linkedin-post.png",
+    link: { label: "LinkedIn post", href: "https://www.linkedin.com/feed/update/urn:li:activity:7504125301166161920/" },
   },  {
     title: "Hardware Task-List Module",
     stack: ["VHDL", "FPGA", "FSM"],

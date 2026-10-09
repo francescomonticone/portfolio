@@ -264,15 +264,31 @@ export function MinorProjects() {
       <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
         {minorProjects.map((p, i) => (
           <Reveal key={p.title} delay={(i % 2) * 0.08}>
-            <article className="h-full rounded-bento border border-line bg-card p-5 transition-all duration-200 hover:-translate-y-0.5">
-              <h3 className="text-lg font-bold tracking-tight">{p.title}</h3>
-              <p className="mt-1 text-sm leading-relaxed text-muted">{p.description}</p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {p.stack.map((s) => (
-                  <span key={s} className="rounded-full border border-line bg-carddeep px-3 py-1 text-xs font-medium text-muted">
-                    {s}
-                  </span>
-                ))}
+            <article className="h-full overflow-hidden rounded-bento border border-line bg-card transition-all duration-200 hover:-translate-y-0.5">
+              {p.photo && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={p.photo} alt={`${p.title} preview`} loading="lazy" className="h-44 w-full object-cover object-top" />
+              )}
+              <div className="p-5">
+                <h3 className="text-lg font-bold tracking-tight">{p.title}</h3>
+                <p className="mt-1 text-sm leading-relaxed text-muted">{p.description}</p>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  {p.stack.map((s) => (
+                    <span key={s} className="rounded-full border border-line bg-carddeep px-3 py-1 text-xs font-medium text-muted">
+                      {s}
+                    </span>
+                  ))}
+                  {p.link && (
+                    <a
+                      href={p.link.href}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="rounded-full bg-primary px-3 py-1 text-xs font-semibold text-white transition-all hover:-translate-y-0.5"
+                    >
+                      {p.link.label} ↗
+                    </a>
+                  )}
+                </div>
               </div>
             </article>
           </Reveal>
