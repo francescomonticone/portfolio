@@ -8,6 +8,8 @@ import { LiquidButton, GlassFilter } from "@/components/ui/liquid-glass-button";
 import { ContactForm } from "@/components/contact-form";
 import { HorizontalProjects, MinorProjects, NowBuilding } from "@/components/horizontal-projects";
 import { SkillsSection } from "@/components/skills/SkillScene";
+import { answerQuestion } from "@/lib/chatbot";
+import type { ChatAnswer } from "@/lib/chatbot";
 import {
   education,
   experience,
@@ -50,21 +52,14 @@ function Marquee({
 
 export default function Home() {
   const [query, setQuery] = useState("");
-  const [answer, setAnswer] = useState<string | null>(null);
+  const [answer, setAnswer] = useState<ChatAnswer | null>(null);
 
-  const ask = (q: string) => {
-    const s = q.toLowerCase();
-    if (!s.trim()) return;
-    if (s.includes("work") || s.includes("project"))
-      setAnswer("6 featured dossiers below — from study-plan tools to ROS 2 navigation. Scroll to #projects.");
-    else if (s.includes("skill"))
-      setAnswer("C/C++, Rust, TypeScript, React, ROS 2, VHDL — see the #skills grid.");
-    else if (s.includes("contact") || s.includes("hire") || s.includes("intern"))
-      setAnswer("Open to SWE / AI / security internships — reach out via GitHub & LinkedIn below.");
-    else if (s.includes("about") || s.includes("who"))
-      setAnswer("MSc Computer Science & Engineering @ Politecnico di Milano. Curious, precise, learn-by-building.");
-    else setAnswer("Try a chip above — Work, About me, Skills or Contact.");
+  const runAsk = (q: string) => {
+    if (!q.trim()) return;
+    setAnswer(answerQuestion(q));
   };
+
+  const ask = (q: string) => runAsk(q);
 
   return (
     <div id="top" className="relative min-h-screen overflow-x-clip bg-abyss text-ink">
@@ -171,9 +166,40 @@ export default function Home() {
                 </button>
               </form>
               {answer && (
-                <p className="mt-3 rounded-bento border border-line bg-card px-4 py-3 text-[15px] text-ink">
-                  {answer}
-                </p>
+                <div className="mt-3 rounded-bento border border-line bg-card px-4 py-3">
+                  <p className="text-[15px] text-ink">{answer.text}</p>
+                  {answer.links.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {answer.links.map((l) => (
+                        <a
+                          key={l.href + l.label}
+                          href={l.href}
+                          target={l.href.startsWith("#") ? undefined : "_blank"}
+                          rel="noreferrer"
+                          className="rounded-full border border-line bg-carddeep px-3 py-1 text-xs font-semibold text-muted transition-colors hover:text-ink"
+                        >
+                          {l.label} ↗
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                  {answer.suggestions.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {answer.suggestions.map((s) => (
+                        <button
+                          key={s}
+                          onClick={() => {
+                            setQuery(s);
+                            runAsk(s);
+                          }}
+                          className="rounded-full bg-white/[0.03] px-3 py-1 text-xs text-faint transition-colors hover:text-ink"
+                        >
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </section>
