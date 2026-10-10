@@ -21,7 +21,7 @@ export type Mood =
   | "confused"
   | "angry";
 
-export type EyeShape = "oval" | "happy" | "excited" | "closed";
+export type EyeShape = "oval" | "happy" | "excited" | "closed" | "dots";
 
 export interface FaceParams {
   /** Eye openness 0 (shut) .. ~1.15 (wide). */
@@ -53,7 +53,7 @@ export const PRESETS: Record<Mood, MoodDef> = {
     shapeL: "oval", shapeR: "oval", zzz: false,
   },
   happy: {
-    params: { eyeL: 1, eyeR: 1, browL: 0, browR: 0, mouthSmile: 0.9, mouthOpen: 0.3, mouthShift: 0, tilt: 0 },
+    params: { eyeL: 1, eyeR: 1, browL: 0, browR: 0, mouthSmile: 0.9, mouthOpen: 0, mouthShift: 0, tilt: 0 },
     shapeL: "happy", shapeR: "happy", zzz: false,
   },
   excited: {

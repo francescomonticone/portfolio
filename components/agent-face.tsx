@@ -18,8 +18,17 @@ export function AgentFace({ mood, size = 44 }: { mood: Mood; size?: number }) {
   const rpRef = useRef<FaceParams>(def.params);
   // Discrete shapes follow the mood directly (no timers — race-free);
   // fluidity comes from the geometry tween underneath.
-  const shapeL = def.shapeL;
-  const shapeR = def.shapeR;
+  // Happy alternates arcs / dots on every entry, for variety.
+  const happyCount = useRef(0);
+  const [dotsHappy, setDotsHappy] = useState(false);
+  useEffect(() => {
+    if (mood === "happy") {
+      happyCount.current += 1;
+      setDotsHappy(happyCount.current % 2 === 0);
+    }
+  }, [mood]);
+  const shapeL: EyeShape = dotsHappy && def.shapeL === "happy" ? "dots" : def.shapeL;
+  const shapeR: EyeShape = dotsHappy && def.shapeR === "happy" ? "dots" : def.shapeR;
   const showZzz = def.zzz;
 
   // Fluid morph between presets on mood change (progress 0->1, lerp by hand).
@@ -141,6 +150,9 @@ function Eye({ cx, cy, open, shape, mirror }: { cx: number; cy: number; open: nu
         stroke={DARK} strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" fill="none"
       />
     );
+  }
+  if (shape === "dots") {
+    return <circle cx={cx} cy={cy} r="1.7" fill={DARK} />;
   }
   return (
     <g>
