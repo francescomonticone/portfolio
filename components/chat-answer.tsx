@@ -4,30 +4,23 @@ import { useEffect, useMemo, useState } from "react";
 import { useReducedMotion } from "framer-motion";
 import type { ChatAnswer } from "@/lib/chatbot";
 import { GithubIcon } from "@/components/github-icon";
+import { AgentFace } from "@/components/agent-face";
+import { moodForAnswer } from "@/lib/agent-face/faceModel";
+import type { Mood } from "@/lib/agent-face/faceModel";
 
 /**
  * Slot for the future 3D AI agent face.
- * TODO(agent-3d): replace this placeholder with the animated 3D character
- * that moves around the page. Keep the same rounded-rectangle footprint
- * (h-11 w-11, rounded-2xl) so the layout does not shift.
+ * TODO(agent-3d): the 3D model face screen reuses lib/agent-face/faceModel
+ * (Mood, PRESETS, lerpParams) — only the renderer changes. Keep the same
+ * rounded-rectangle footprint so the layout does not shift.
  */
-export function AgentAvatar({ typing }: { typing: boolean }) {
+export function AgentAvatar({ mood }: { mood: Mood }) {
   return (
     <div
       data-agent="avatar-slot"
-      aria-hidden
-      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] ${
-        typing ? "animate-pulse" : ""
-      }`}
+      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04]"
     >
-      {/* Temporary mark until the 3D agent + animations land. */}
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-6 w-6 text-muted">
-        <rect x="5" y="8" width="14" height="11" rx="3" />
-        <circle cx="9.5" cy="13" r="1" fill="currentColor" stroke="none" />
-        <circle cx="14.5" cy="13" r="1" fill="currentColor" stroke="none" />
-        <path d="M12 8V4" strokeLinecap="round" />
-        <circle cx="12" cy="3.2" r="1" fill="currentColor" stroke="none" />
-      </svg>
+      <AgentFace mood={mood} size={40} />
     </div>
   );
 }
@@ -67,10 +60,21 @@ export function StreamingAnswer({
 
   const done = shown >= tokens.length;
 
+  // Sleepy after 30s of inactivity once the answer is complete.
+  const [sleepy, setSleepy] = useState(false);
+  useEffect(() => {
+    setSleepy(false);
+    if (!done) return;
+    const t = setTimeout(() => setSleepy(true), 30000);
+    return () => clearTimeout(t);
+  }, [answer, done]);
+
+  const mood: Mood = !done ? "curious" : sleepy ? "sleepy" : moodForAnswer(answer.text);
+
   return (
     <div className="mt-3 rounded-bento border border-line bg-card px-4 py-3">
       <div className="flex gap-3">
-        <AgentAvatar typing={!done} />
+        <AgentAvatar mood={mood} />
         <div className="min-w-0 flex-1">
           <p className="text-[15px] text-ink">
             {tokens.slice(0, shown).join("")}
