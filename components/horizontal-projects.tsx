@@ -2,7 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
-import { ArrowUpRight, Cpu, Waves } from "lucide-react";
+import { ArrowUpRight, Cpu, Lock, Waves } from "lucide-react";
 import { DroCaseStudy, DroPreview } from "@/components/dro-case-study";
 import { Reveal } from "@/components/motion";
 import { GithubIcon } from "@/components/github-icon";
@@ -23,10 +23,12 @@ function PhotoCarousel({
   title,
   photos,
   logo,
+  overlay,
 }: {
   title: string;
   photos: string[];
   logo?: string;
+  overlay?: React.ReactNode;
 }) {
   const [idx, setIdx] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -59,6 +61,7 @@ function PhotoCarousel({
             />
           ))}
         </div>
+        {overlay}
       </div>
       <div className="mt-2 flex min-h-[22px] items-center justify-between">
         <div className="flex gap-1.5">
@@ -207,7 +210,7 @@ export function HorizontalProjects() {
   // la seconda tiene l'ultima card completamente dentro lo schermo.
   const x = useTransform(scrollYProgress, [0, 0.05, 0.88, 1], [0, 0, -range, -range]);
   /** Cresce con il numero di card: aggiungi un progetto e lo scroll si allunga. */
-  const sectionHeight = `${120 + projects.length * 62}vh`;
+  const sectionHeight = `${96 + projects.length * 38}vh`;
 
   if (reduce) {
     return (
@@ -297,6 +300,12 @@ export function MinorProjects() {
                 <p className="mt-1 line-clamp-3 text-sm leading-relaxed text-muted">
                   {project.description}
                 </p>
+                {project.note && (
+                  <p className="mt-2.5 inline-flex items-start gap-1.5 rounded-lg border border-amber-400/20 bg-amber-400/[0.06] px-2.5 py-1.5 text-[11px] font-medium leading-snug text-amber-200/85">
+                    <Lock className="mt-0.5 h-3 w-3 shrink-0" aria-hidden />
+                    {project.note}
+                  </p>
+                )}
                 <div className="mt-auto flex flex-wrap items-center gap-2 pt-4">
                   {project.stack.map((s) => (
                     <span
@@ -550,7 +559,31 @@ export function NowBuilding() {
                     )}
                   </div>
                 </div>
-                {project.visual === "franco" ? <FrancoVisual /> : project.visual === "hand" ? <HandTrackingVisual /> : null}
+                {project.photos.length > 0 ? (
+                  <PhotoCarousel
+                    title={project.title}
+                    photos={project.photos}
+                    overlay={
+                      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-abyss/75 via-transparent to-abyss/25">
+                        <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">
+                          <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-black/55 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.12em] text-[#7dd3fc] backdrop-blur-sm">
+                            <Waves className="h-3 w-3" /> {t.now.floodRescue}
+                          </span>
+                          <span className="rounded-full border border-white/15 bg-black/50 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.12em] text-ink backdrop-blur-sm">
+                            AIRLAB
+                          </span>
+                        </div>
+                        <span className="absolute bottom-3 right-3 text-[9px] font-semibold uppercase tracking-[0.14em] text-ink/70">
+                          F.R.A.N.C.O. · 2026
+                        </span>
+                      </div>
+                    }
+                  />
+                ) : project.visual === "franco" ? (
+                  <FrancoVisual />
+                ) : project.visual === "hand" ? (
+                  <HandTrackingVisual />
+                ) : null}
               </div>
             </article>
           </Reveal>

@@ -120,19 +120,6 @@ export const projects: Project[] = [
   },
   {
     id: "05",
-    type: "Personal Project",
-    title: "PomoGP",
-    stack: ["Web App", "F1 Telemetry"],
-    description:
-      "Formula 1 themed Pomodoro focus timer with live telemetry, real circuits and team radio — built for high performance.",
-    points: ["Focus timer", "Real circuits", "Team radio"],
-    codePublic: true,
-    academic: false,
-    photos: ["/project_foto/pomoGP/pomoGP-screenshot.png"],
-    repo: "https://github.com/francescomonticone/pomoGP",
-  },
-  {
-    id: "06",
     type: "Academic Project",
     title: "ROS 2 Odometry",
     stack: ["ROS 2", "C++", "TF", "RViz2"],
@@ -154,6 +141,22 @@ export const nowBuilding: Project[] = [
   {
     id: "W1",
     type: "Work in progress",
+    title: "F.R.A.N.C.O.",
+    stack: ["ROS 2", "Firmware", "Electronics"],
+    description:
+      "Autonomous flood-rescue robot by PoliMi Data Scientists, built to carry vital supplies across flooded areas. I work across the Firmware & Electronics teams: ROS 2 migration, sensor integration, wiring, power and field testing.",
+    points: ["ROS 2 migration", "Sensor stack", "Flood rescue"],
+    codePublic: false,
+    academic: false,
+    photos: ["/project_foto/franco/franco.webp"],
+    org: "PoliMi Data Scientists",
+    role: "Firmware & Electronics team",
+    link: { label: "Project page", href: "https://www.polimidatascientists.it/projects" },
+    visual: "franco",
+  },
+  {
+    id: "W2",
+    type: "Work in progress",
     title: "AirDocs",
     stack: ["Swift", "macOS", "Vision"],
     description:
@@ -163,22 +166,6 @@ export const nowBuilding: Project[] = [
     academic: false,
     photos: [],
     visual: "hand",
-  },
-  {
-    id: "W2",
-    type: "Work in progress",
-    title: "F.R.A.N.C.O.",
-    stack: ["ROS 2", "Firmware", "Electronics"],
-    description:
-      "Autonomous flood-rescue robot by PoliMi Data Scientists, built to carry vital supplies across flooded areas. I work across the Firmware & Electronics teams: ROS 2 migration, sensor integration, wiring, power and field testing.",
-    points: ["ROS 2 migration", "Sensor stack", "Flood rescue"],
-    codePublic: false,
-    academic: false,
-    photos: [],
-    org: "PoliMi Data Scientists",
-    role: "Firmware & Electronics team",
-    link: { label: "Project page", href: "https://www.polimidatascientists.it/projects" },
-    visual: "franco",
   },
 ];
 
@@ -209,20 +196,31 @@ export const education = [
   { school: "Liceo Scientifico Madonna della Neve", degree: "Scientific Diploma", period: "Brescia" },
 ];
 
-export type Certification = { title: string; detail?: string };
+export type Certification = {
+  title: string;
+  detail?: string;
+  issuer?: string;
+  href?: string;
+  /** Optional certificate file (image or PDF) to preview instead of linking out. */
+  preview?: string;
+};
+
+export const linkedinCredentials =
+  "https://www.linkedin.com/in/francesco-monticone-04412b2a0/details/certifications/";
 
 export const certifications: Certification[] = [
-  { title: "TOEIC Listening & Reading", detail: "965/990" },
-  { title: "Git Certification", detail: "PoliMi" },
-  { title: "ECDL Base" },
-  { title: "Il Grifone d'Acciaio", detail: "Scholarship" },
-  { title: "PoliMi Merit-Based", detail: "Scholarship" },
+  { title: "TOEIC Listening & Reading", detail: "965/990", issuer: "ETS", href: linkedinCredentials },
+  { title: "Git Certification", detail: "PoliMi", issuer: "Politecnico di Milano", href: linkedinCredentials },
+  { title: "ECDL Base", issuer: "AICA", href: linkedinCredentials },
+  { title: "Il Grifone d'Acciaio", detail: "Scholarship", issuer: "Politecnico di Milano", href: linkedinCredentials },
+  { title: "PoliMi Merit-Based", detail: "Scholarship", issuer: "Politecnico di Milano", href: linkedinCredentials },
 ];
 
 export type MinorProject = {
   title: string;
   stack: string[];
   description: string;
+  note?: string;
   photo?: string;
   link?: { label: string; href: string };
 };
@@ -230,17 +228,27 @@ export type MinorProject = {
 /** Progettini minori: per aggiungerne uno, basta appendere qui. */
 export const minorProjects: MinorProject[] = [
   {
+    title: "Hardware Task-List Module",
+    stack: ["VHDL", "FPGA", "FSM"],
+    description:
+      "VHDL module managing an ordered task list in external RAM — FSMs for insert, remove, priority and clear, verified in Vivado.",
+    note: "Not published yet — code withheld under the university's anti-plagiarism policy.",
+  },
+  {
     title: "PoliMi T2A Study Plan",
     stack: ["TypeScript", "React"],
     description:
       "Interactive planner for a CSE Master's study plan: course combinations and constraint checking. Independent project — not an official Politecnico di Milano application.",
     photo: "/project_foto/t2a-study-plan/linkedin-post.png",
     link: { label: "LinkedIn post", href: "https://www.linkedin.com/feed/update/urn:li:activity:7504125301166161920/" },
-  },  {
-    title: "Hardware Task-List Module",
-    stack: ["VHDL", "FPGA", "FSM"],
+  },
+  {
+    title: "PomoGP",
+    stack: ["Web App", "F1 Telemetry"],
     description:
-      "VHDL module managing an ordered task list in external RAM — FSMs for insert, remove, priority and clear, verified in Vivado.",
+      "Formula 1 themed Pomodoro focus timer with live telemetry, real circuits and team radio — built for high performance.",
+    photo: "/project_foto/pomoGP/pomoGP-screenshot.png",
+    link: { label: "Repositories", href: "https://github.com/francescomonticone/pomoGP" },
   },
 ];
 
@@ -275,6 +283,8 @@ export type TimelineEntry = {
   text: string;
   meta?: string;
   logo?: string;
+  /** White logos need a dark chip to stay visible. */
+  logoDark?: boolean;
 };
 
 /** Percorso in ordine cronologico inverso: aggiungi in cima per le novità. */
@@ -286,7 +296,8 @@ export const timeline: TimelineEntry[] = [
     period: "2026 — present",
     text: "Building the ROS 2 and sensor stack for an autonomous flood-rescue robot: Arduino → ROS 2 migration, sensor integration, wiring, power and waterproofing, tested with the AI team.",
     meta: "Ongoing",
-    logo: "/logos/pmds.png",
+    logo: "/logos/pmds-wordmark.svg",
+    logoDark: true,
   },
   {
     kind: "work",
@@ -294,7 +305,7 @@ export const timeline: TimelineEntry[] = [
     org: "Politecnico di Milano",
     period: "2023 — 2026",
     text: "Tutoring in Calculus I, Physics and Electrical Engineering — individual and group support, exam preparation.",
-    logo: "/logos/polimi.svg",
+    logo: "/logos/polimi-official.svg",
   },
   {
     kind: "work",
@@ -311,7 +322,7 @@ export const timeline: TimelineEntry[] = [
     period: "2026 — present",
     text: "Systems, AI and security — building on a computer engineering foundation.",
     meta: "In progress",
-    logo: "/logos/polimi.svg",
+    logo: "/logos/polimi-official.svg",
   },
   {
     kind: "education",
@@ -320,7 +331,7 @@ export const timeline: TimelineEntry[] = [
     period: "Graduated 2026",
     text: "Computer engineering fundamentals: hardware, software, networks and applied mathematics.",
     meta: "109/110",
-    logo: "/logos/polimi.svg",
+    logo: "/logos/polimi-official.svg",
   },
   {
     kind: "education",
