@@ -3,8 +3,8 @@
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { orbitConfig } from "@/lib/skills3d";
-import { skillGroups } from "@/lib/content";
 import { Eyebrow, Reveal } from "@/components/motion";
+import { useSite } from "@/lib/locale";
 
 const SkillCanvas = dynamic(() => import("./SkillCanvas").then((m) => m.SkillCanvas), {
   ssr: false,
@@ -17,6 +17,7 @@ const SkillCanvas = dynamic(() => import("./SkillCanvas").then((m) => m.SkillCan
 
 /* ---------- fallback chip grid (mobile / no WebGL) ---------- */
 export function SkillsGrid() {
+  const { skillGroups } = useSite();
   return (
     <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
       {skillGroups.map((g, i) => (
@@ -39,6 +40,7 @@ export function SkillsGrid() {
 
 /* ---------- sezione: 3D su desktop, chip su mobile ---------- */
 export function SkillsSection() {
+  const { t } = useSite();
   const [mode, setMode] = useState<"3d" | "grid">("grid");
 
   useEffect(() => {
@@ -56,12 +58,12 @@ export function SkillsSection() {
   return (
     <section id="skills" className="mt-24 scroll-mt-24">
       <Reveal>
-        <Eyebrow>Tech Stack</Eyebrow>
+        <Eyebrow>{t.skills.eyebrow}</Eyebrow>
         <h2 className="mt-2 text-4xl font-bold leading-tight tracking-[-1.2px] md:text-[60px] md:leading-[72px]">
-          My <span className="text-muted">Skills</span>
+          {t.skills.titleA} <span className="text-[#7dd3fc]">{t.skills.titleB}</span>
         </h2>
         <p className="mt-3 max-w-[65ch] text-muted">
-          Studied, explored or used in projects.
+          {t.skills.desc}
         </p>
       </Reveal>
       <div className="mt-8">{mode === "3d" ? <SkillCanvas /> : <SkillsGrid />}</div>

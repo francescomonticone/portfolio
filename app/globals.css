@@ -16,20 +16,6 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Gradient name shimmer — verified 3s linear infinite on reference */
-@keyframes shimmer-gradient {
-  0% { background-position: 0% 50%; }
-  100% { background-position: 200% 50%; }
-}
-.text-gradient-shimmer {
-  background: linear-gradient(90deg, #00a3ff, #22d3ee, #00a3ff);
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: shimmer-gradient 3s linear infinite;
-}
-
 /* Radar sweep — rotazione conica fluida, niente blink */
 @keyframes radar-sweep {
   from { transform: rotate(0deg); }
@@ -73,8 +59,7 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .marquee-track,
-  .text-gradient-shimmer {
+  .marquee-track {
     animation: none;
   }
   html {

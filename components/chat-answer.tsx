@@ -7,6 +7,7 @@ import { GithubIcon } from "@/components/github-icon";
 import { AgentFace } from "@/components/agent-face";
 import { moodForAnswer } from "@/lib/agent-face/faceModel";
 import type { Mood } from "@/lib/agent-face/faceModel";
+import { useSite } from "@/lib/locale";
 
 /**
  * Slot for the future 3D AI agent face.
@@ -37,6 +38,7 @@ export function StreamingAnswer({
   onPick: (suggestion: string) => void;
 }) {
   const reduce = useReducedMotion();
+  const { t } = useSite();
   const tokens = useMemo(() => answer.text.split(/(\s+)/), [answer.text]);
   const [shown, setShown] = useState(0);
 
@@ -107,7 +109,7 @@ export function StreamingAnswer({
           {done && answer.suggestions.length > 0 && (
             <div className="mt-3">
               <p className="text-right text-[11px] font-semibold uppercase tracking-[0.14em] text-faint">
-                Try next:
+                {t.chat.tryNext}
               </p>
               <div className="mt-1.5 flex flex-wrap justify-end gap-2.5">
                 {answer.suggestions.map((s) => (

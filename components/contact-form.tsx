@@ -2,14 +2,7 @@
 
 import { useState } from "react";
 import { Button, LiquidButton } from "@/components/ui/liquid-glass-button";
-
-const OPPORTUNITIES = [
-  "SWE internship",
-  "AI / ML",
-  "Cybersecurity",
-  "Research",
-  "Other",
-];
+import { useSite } from "@/lib/locale";
 
 /**
  * Form recruiter → email via Web3Forms (nessun backend proprio,
@@ -17,8 +10,9 @@ const OPPORTUNITIES = [
  * Config: NEXT_PUBLIC_WEB3FORMS_KEY nel .env.local
  */
 export function ContactForm() {
+  const site = useSite();
+  const f = site.t.contact.form;
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
-  const [type, setType] = useState(OPPORTUNITIES[0]);
   const key = process.env.NEXT_PUBLIC_WEB3FORMS_KEY;
 
   const submit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -35,7 +29,7 @@ export function ContactForm() {
       const res = await fetch("https://api.web3forms.com/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ access_key: key, subject: `Portfolio: ${type}`, ...data, type }),
+        body: JSON.stringify({ access_key: key, subject: "Portfolio: contact", ...data }),
       });
       const json = await res.json();
       if (json.success) {
@@ -56,10 +50,10 @@ export function ContactForm() {
   if (status === "sent") {
     return (
       <div className="rounded-bento border border-line bg-card p-6 text-center">
-        <p className="text-xl font-bold text-ink">Message sent ✓</p>
-        <p className="mt-2 text-[15px] text-muted">Thanks for reaching out — I&apos;ll get back to you soon.</p>
+        <p className="text-xl font-bold text-ink">{f.sentTitle}</p>
+        <p className="mt-2 text-[15px] text-muted">{f.sentBody}</p>
         <Button variant="ghost" size="sm" className="mt-4" onClick={() => setStatus("idle")}>
-          Send another
+          {f.sendAnother}
         </Button>
       </div>
     );
@@ -69,68 +63,42 @@ export function ContactForm() {
     <form onSubmit={submit} className="rounded-bento border border-line bg-card p-5 md:p-6">
       {/* honeypot anti-spam */}
       <input type="text" name="company_website" className="hidden" tabIndex={-1} autoComplete="off" />
-      <input type="hidden" name="type" value={type} />
 
-      <div>
-        <span id="opp-label" className={label}>I&apos;m looking for</span>
-        <div role="radiogroup" aria-labelledby="opp-label" className="flex flex-wrap gap-2">
-          {OPPORTUNITIES.map((o) => {
-            const on = type === o;
-            return (
-              <button
-                key={o}
-                type="button"
-                role="radio"
-                aria-checked={on}
-                onClick={() => setType(o)}
-                className={`rounded-full px-4 py-2 text-sm font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
-                  on
-                    ? "bg-primary text-white shadow-[0_0_20px_rgba(0,163,255,0.35)]"
-                    : "border border-line bg-carddeep text-muted hover:border-primary/50 hover:text-ink"
-                }`}
-              >
-                {o}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <label htmlFor="cf-name" className={label}>Name</label>
-          <input id="cf-name" name="name" required placeholder="Jane Smith" autoComplete="name" className={field} />
+          <label htmlFor="cf-name" className={label}>{f.name}</label>
+          <input id="cf-name" name="name" required placeholder={f.namePlaceholder} autoComplete="name" className={field} />
         </div>
         <div>
-          <label htmlFor="cf-email" className={label}>Work email</label>
-          <input id="cf-email" name="email" required type="email" placeholder="jane@company.com" autoComplete="email" className={field} />
+          <label htmlFor="cf-email" className={label}>{f.email}</label>
+          <input id="cf-email" name="email" required type="email" placeholder={f.emailPlaceholder} autoComplete="email" className={field} />
         </div>
       </div>
 
       <div className="mt-4">
-        <label htmlFor="cf-company" className={label}>Company <span className="normal-case tracking-normal text-faint">(optional)</span></label>
-        <input id="cf-company" name="company" placeholder="Company Inc." autoComplete="organization" className={field} />
+        <label htmlFor="cf-company" className={label}>{f.company} <span className="normal-case tracking-normal text-faint">{f.companyOptional}</span></label>
+        <input id="cf-company" name="company" placeholder={f.companyPlaceholder} autoComplete="organization" className={field} />
       </div>
 
       <div className="mt-4">
-        <label htmlFor="cf-message" className={label}>Message</label>
+        <label htmlFor="cf-message" className={label}>{f.message}</label>
         <textarea
           id="cf-message"
           name="message"
           required
           rows={4}
-          placeholder="Role, timing, what you're looking for…"
+          placeholder={f.messagePlaceholder}
           className={`${field} resize-none`}
         />
       </div>
 
       <LiquidButton type="submit" size="lg" className="mt-5 w-full" disabled={status === "sending"}>
-        {status === "sending" ? "Sending…" : "Send message"}
+        {status === "sending" ? f.sending : f.send}
       </LiquidButton>
 
       {!key && (
         <p className="mt-3 text-xs text-faint">
-          Form endpoint not configured yet (NEXT_PUBLIC_WEB3FORMS_KEY).
+          {f.notConfigured}
         </p>
       )}
       {status === "error" && key && (

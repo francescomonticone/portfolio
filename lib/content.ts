@@ -44,6 +44,11 @@ export type Project = {
   photos: string[];
   logo?: string;
   repo?: string;
+  org?: string;
+  role?: string;
+  link?: { label: string; href: string };
+  caseStudy?: "dro";
+  visual?: "hand" | "franco";
 };
 
 export const projects: Project[] = [
@@ -97,6 +102,7 @@ export const projects: Project[] = [
     codePublic: true,
     academic: true,
     photos: [],
+    caseStudy: "dro",
     repo: "https://github.com/francescomonticone/progetto-api-2024-2025",
   },
   {
@@ -156,6 +162,23 @@ export const nowBuilding: Project[] = [
     codePublic: true,
     academic: false,
     photos: [],
+    visual: "hand",
+  },
+  {
+    id: "W2",
+    type: "Work in progress",
+    title: "F.R.A.N.C.O.",
+    stack: ["ROS 2", "Firmware", "Electronics"],
+    description:
+      "Autonomous flood-rescue robot by PoliMi Data Scientists, built to carry vital supplies across flooded areas. I work across the Firmware & Electronics teams: ROS 2 migration, sensor integration, wiring, power and field testing.",
+    points: ["ROS 2 migration", "Sensor stack", "Flood rescue"],
+    codePublic: false,
+    academic: false,
+    photos: [],
+    org: "PoliMi Data Scientists",
+    role: "Firmware & Electronics team",
+    link: { label: "Project page", href: "https://www.polimidatascientists.it/projects" },
+    visual: "franco",
   },
 ];
 
@@ -186,12 +209,14 @@ export const education = [
   { school: "Liceo Scientifico Madonna della Neve", degree: "Scientific Diploma", period: "Brescia" },
 ];
 
-export const certifications = [
-  "TOEIC Listening & Reading — 965/990",
-  "Politecnico di Milano — Git Certification",
-  "ECDL Base",
-  "Il Grifone d'Acciaio Scholarship",
-  "PoliMi Merit-Based Scholarship",
+export type Certification = { title: string; detail?: string };
+
+export const certifications: Certification[] = [
+  { title: "TOEIC Listening & Reading", detail: "965/990" },
+  { title: "Git Certification", detail: "PoliMi" },
+  { title: "ECDL Base" },
+  { title: "Il Grifone d'Acciaio", detail: "Scholarship" },
+  { title: "PoliMi Merit-Based", detail: "Scholarship" },
 ];
 
 export type MinorProject = {
@@ -219,16 +244,93 @@ export const minorProjects: MinorProject[] = [
   },
 ];
 
-export const semesterCourses = [
-  { name: "Advanced Operating Systems", tags: ["Real-time scheduling", "Concurrency & IPC", "Device drivers"] },
-  { name: "Foundations of Artificial Intelligence", tags: ["Search & A*", "Games", "CSP", "Logic & planning"] },
-  { name: "Software Engineering 2", tags: ["RASD & UML", "Alloy modeling", "V&V & testing"] },
-  { name: "Databases 2", tags: ["NoSQL", "Distributed DB", "Query optimization"] },
-  { name: "Formal Languages and Compilers", tags: ["Automata", "Grammars", "Parsing"] },
-  { name: "Foundations of Operations Research", tags: ["Linear programming", "Simplex", "Optimization"] },
+export type CourseIcon = "cpu" | "brain" | "boxes" | "database" | "braces" | "sigma";
+
+export const semesterCourses: {
+  name: string;
+  icon: CourseIcon;
+  tags: string[];
+}[] = [
+  { name: "Advanced Operating Systems", icon: "cpu", tags: ["Real-time scheduling", "Concurrency & IPC", "Device drivers"] },
+  { name: "Foundations of Artificial Intelligence", icon: "brain", tags: ["Search & A*", "Games", "CSP", "Logic & planning"] },
+  { name: "Software Engineering 2", icon: "boxes", tags: ["RASD & UML", "Alloy modeling", "V&V & testing"] },
+  { name: "Databases 2", icon: "database", tags: ["NoSQL", "Distributed DB", "Query optimization"] },
+  { name: "Formal Languages and Compilers", icon: "braces", tags: ["Automata", "Grammars", "Parsing"] },
+  { name: "Foundations of Operations Research", icon: "sigma", tags: ["Linear programming", "Simplex", "Optimization"] },
 ];
 
-export const personalTrack = ["LLMs & AI systems", "AI security", "CUDA & parallel computing"];
+export type PersonalTrackIcon = "sparkles" | "shield" | "gpu";
+
+export const personalTrack: { label: string; icon: PersonalTrackIcon }[] = [
+  { label: "LLMs & AI systems", icon: "sparkles" },
+  { label: "AI security", icon: "shield" },
+  { label: "CUDA & parallel computing", icon: "gpu" },
+];
+
+export type TimelineEntry = {
+  kind: "education" | "work";
+  title: string;
+  org: string;
+  period: string;
+  text: string;
+  meta?: string;
+  logo?: string;
+};
+
+/** Percorso in ordine cronologico inverso: aggiungi in cima per le novità. */
+export const timeline: TimelineEntry[] = [
+  {
+    kind: "work",
+    title: "Firmware & Electronics Team",
+    org: "PoliMi Data Scientists · F.R.A.N.C.O.",
+    period: "2026 — present",
+    text: "Building the ROS 2 and sensor stack for an autonomous flood-rescue robot: Arduino → ROS 2 migration, sensor integration, wiring, power and waterproofing, tested with the AI team.",
+    meta: "Ongoing",
+    logo: "/logos/pmds.png",
+  },
+  {
+    kind: "work",
+    title: "Engineering Tutor",
+    org: "Politecnico di Milano",
+    period: "2023 — 2026",
+    text: "Tutoring in Calculus I, Physics and Electrical Engineering — individual and group support, exam preparation.",
+    logo: "/logos/polimi.svg",
+  },
+  {
+    kind: "work",
+    title: "Intern",
+    org: "Confartigianato Palazzolo",
+    period: "2022",
+    text: "Company data management with Microsoft Excel — maintenance and updating of business spreadsheets.",
+    logo: "/logos/confartigianato.png",
+  },
+  {
+    kind: "education",
+    title: "MSc Computer Science & Engineering",
+    org: "Politecnico di Milano",
+    period: "2026 — present",
+    text: "Systems, AI and security — building on a computer engineering foundation.",
+    meta: "In progress",
+    logo: "/logos/polimi.svg",
+  },
+  {
+    kind: "education",
+    title: "BSc Computer Engineering",
+    org: "Politecnico di Milano",
+    period: "Graduated 2026",
+    text: "Computer engineering fundamentals: hardware, software, networks and applied mathematics.",
+    meta: "109/110",
+    logo: "/logos/polimi.svg",
+  },
+  {
+    kind: "education",
+    title: "Scientific Diploma",
+    org: "Liceo Scientifico Madonna della Neve",
+    period: "Brescia",
+    text: "Scientific high school — mathematics, physics and natural sciences.",
+    logo: "/logos/mdn.png",
+  },
+];
 
 export const exploreCards = [
   { title: "Experience", text: "Tutoring, internship and real-world software work.", href: "#other" },

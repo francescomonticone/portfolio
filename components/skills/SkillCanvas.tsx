@@ -5,6 +5,7 @@ import * as THREE from "three";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Line, OrbitControls, Stars, useTexture } from "@react-three/drei";
 import { orbitConfig, skills3d, type OrbitId, type Skill3D } from "@/lib/skills3d";
+import { useSite } from "@/lib/locale";
 
 
 /** Carica un SVG garantendo dimensioni intrinseche (molti loghi hanno solo viewBox). */
@@ -292,6 +293,8 @@ function System({
 
 /* ---------- scena ---------- */
 export function SkillCanvas() {
+  const site = useSite();
+  const orbitLabel = (id: OrbitId) => site.t.skills.orbits[id];
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [selected, setSelected] = useState<Skill3D | null>(null);
   const [focused, setFocused] = useState<OrbitId | null>(null);
@@ -331,15 +334,15 @@ export function SkillCanvas() {
             <button
               key={id ?? "all"}
               onClick={() => setFocused(active ? null : id)}
-              title={id ? orbitConfig[id].label : "All levels"}
-              aria-label={id ? orbitConfig[id].label : "All levels"}
+              title={id ? orbitLabel(id) : site.t.skills.allLevels}
+              aria-label={id ? orbitLabel(id) : site.t.skills.allLevels}
               className={`flex h-8 w-8 items-center justify-center rounded-full text-[11px] font-bold transition-all duration-200 ${
                 active
                   ? "bg-primary text-white shadow-[0_0_16px_rgba(0,163,255,0.5)]"
                   : "text-muted hover:bg-white/[0.06] hover:text-ink"
               }`}
             >
-              {id ? orbitConfig[id].label.slice(0, 2) : "✦"}
+              {id ? orbitLabel(id).slice(0, 2) : "✦"}
             </button>
           );
         })}
@@ -351,19 +354,21 @@ export function SkillCanvas() {
           <div className="flex items-start justify-between gap-2">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">
-                {orbitConfig[selected.category].label}
+                {orbitLabel(selected.category)}
               </p>
               <h3 className="mt-1 text-lg font-bold text-ink">{selected.name}</h3>
             </div>
             <button
               onClick={() => setSelected(null)}
-              aria-label="Close"
+              aria-label={site.t.skills.close}
               className="rounded-full border border-line px-2 py-0.5 text-xs text-muted hover:text-ink"
             >
               ✕
             </button>
           </div>
-          <p className="mt-2 text-sm leading-relaxed text-muted">{selected.blurb}</p>
+          <p className="mt-2 text-sm leading-relaxed text-muted">
+            {site.locale === "it" && selected.blurbIt ? selected.blurbIt : selected.blurb}
+          </p>
           {selected.projects.length > 0 && (
             <div className="mt-3 flex flex-col gap-2">
               {selected.projects.map((p) => (
