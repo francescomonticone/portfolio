@@ -78,9 +78,12 @@ export function StreamingAnswer({
       <div className="flex gap-3">
         <AgentAvatar mood={mood} />
         <div className="min-w-0 flex-1">
-          <p className="text-[15px] text-ink">
-            {tokens.slice(0, shown).join("")}
-            {!done && <span aria-hidden className="ml-0.5 inline-block h-4 w-2 translate-y-0.5 animate-pulse bg-primary" />}
+          <p className="sr-only" role="status" aria-live="polite">{answer.text}</p>
+          <p className="relative text-[15px] leading-relaxed text-ink" aria-hidden>
+            <span className="invisible">{answer.text}</span>
+            <span className="absolute inset-0">{tokens.slice(0, shown).join("")}
+              {!done && <span className="ml-0.5 inline-block h-4 w-2 translate-y-0.5 animate-pulse bg-primary" />}
+            </span>
           </p>
           {done && answer.links.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-2">
@@ -94,7 +97,7 @@ export function StreamingAnswer({
                     rel="noreferrer"
                     className={
                       isGh
-                        ? "inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-bold text-black transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_24px_rgba(255,255,255,0.25)]"
+                        ? "inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-bold text-black transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_24px_rgba(255,255,255,0.25)]"
                         : "inline-flex items-center gap-1.5 rounded-full border border-line bg-carddeep px-4 py-2 text-xs font-semibold text-muted transition-colors hover:text-ink"
                     }
                   >
@@ -116,7 +119,7 @@ export function StreamingAnswer({
                   <button
                     key={s}
                     onClick={() => onPick(s)}
-                    className="rounded-full bg-primary px-4 py-2 text-xs font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_24px_rgba(0,163,255,0.3)]"
+                    className="rounded-full bg-primary px-4 py-2 text-xs font-semibold text-[#07121c] transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_24px_rgba(0,163,255,0.3)]"
                   >
                     {s}
                   </button>

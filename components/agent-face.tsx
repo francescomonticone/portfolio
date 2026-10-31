@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { animate, motion } from "framer-motion";
+import { animate, motion, useReducedMotion } from "framer-motion";
+import { useActiveAnimation } from "@/lib/use-active-animation";
 import { PRESETS, lerpParams } from "@/lib/agent-face/faceModel";
 import type { EyeShape, FaceParams, Mood } from "@/lib/agent-face/faceModel";
 
@@ -13,6 +14,8 @@ const SHELL_EDGE = "#cfd3d9";
 /** Re-runnable parametric robot face (SVG). Swap `mood` — geometry tweens there. */
 export function AgentFace({ mood, size = 44 }: { mood: Mood; size?: number }) {
   const def = PRESETS[mood];
+  const reduce = useReducedMotion();
+  const { ref, active } = useActiveAnimation<HTMLDivElement>();
   const [rp, setRp] = useState<FaceParams>(def.params);
   const [blink, setBlink] = useState(1);
   const rpRef = useRef<FaceParams>(def.params);
@@ -35,9 +38,10 @@ export function AgentFace({ mood, size = 44 }: { mood: Mood; size?: number }) {
   useEffect(() => {
     const from = { ...rpRef.current };
     const to = def.params;
+    if (reduce || !active) { rpRef.current = to; setRp(to); return; }
     const controls = animate(0, 1, {
-      duration: 0.32,
-      ease: "easeOut",
+      duration: 0.25,
+      ease: [0.23, 1, 0.32, 1],
       onUpdate: (p) => {
         const v = lerpParams(from, to, p);
         rpRef.current = v;
@@ -49,19 +53,21 @@ export function AgentFace({ mood, size = 44 }: { mood: Mood; size?: number }) {
       controls.stop();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mood]);
+  }, [mood, reduce, active]);
 
   // Random blink — only when both eyes are plain ovals.
   useEffect(() => {
+    if (reduce || !active) { setBlink(1); return; }
     let alive = true;
     let timer: ReturnType<typeof setTimeout>;
+    let blinkTimer: ReturnType<typeof setTimeout>;
     const loop = () => {
       timer = setTimeout(() => {
         if (!alive) return;
         const d = PRESETS[mood];
         if (d.shapeL === "oval" && d.shapeR === "oval") {
           setBlink(0.06);
-          setTimeout(() => alive && setBlink(1), 130);
+          blinkTimer = setTimeout(() => alive && setBlink(1), 130);
         }
         loop();
       }, 2400 + Math.random() * 2800);
@@ -70,12 +76,14 @@ export function AgentFace({ mood, size = 44 }: { mood: Mood; size?: number }) {
     return () => {
       alive = false;
       clearTimeout(timer);
+      clearTimeout(blinkTimer);
     };
-  }, [mood]);
+  }, [mood, reduce, active]);
 
   return (
     <motion.div
-      animate={{ y: [0, -1.5, 0] }}
+      ref={ref}
+      animate={{ transform: reduce || !active ? "none" : ["translateY(0px)", "translateY(-1.5px)", "translateY(0px)"] }}
       transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
       style={{ width: size, height: size }}
     >

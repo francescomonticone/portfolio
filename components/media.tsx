@@ -1,6 +1,7 @@
 "use client";
 
-import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { motion, useMotionValue, useSpring, useTransform, useReducedMotion, useMotionTemplate } from "framer-motion";
+import { useActiveAnimation } from "@/lib/use-active-animation";
 import { useEffect, useRef, useState } from "react";
 
 /**
@@ -10,7 +11,9 @@ import { useEffect, useRef, useState } from "react";
  * - se /memoji.png manca, mostra il fallback con iniziali
  */
 export function Memoji({ size = 112 }: { size?: number }) {
-  const ref = useRef<HTMLDivElement>(null);
+  const { ref, active } = useActiveAnimation<HTMLDivElement>();
+  const reduce = useReducedMotion();
+  const [fine, setFine] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
   const [missing, setMissing] = useState(false);
   useEffect(() => {
@@ -23,7 +26,15 @@ export function Memoji({ size = 112 }: { size?: number }) {
   const sy = useSpring(y, { stiffness: 150, damping: 18, mass: 0.6 });
   const rotate = useTransform(sx, [-14, 14], [-8, 8]);
 
+  const transform = useMotionTemplate`translate3d(${sx}px, ${sy}px, 0) rotate(${rotate}deg)`;
   useEffect(() => {
+    const media = window.matchMedia("(hover: hover) and (pointer: fine)");
+    const read = () => setFine(media.matches);
+    read(); media.addEventListener("change", read);
+    return () => media.removeEventListener("change", read);
+  }, []);
+  useEffect(() => {
+    if (!active || reduce || !fine) { x.set(0); y.set(0); return; }
     const onMove = (e: PointerEvent) => {
       const el = ref.current;
       if (!el) return;
@@ -38,7 +49,7 @@ export function Memoji({ size = 112 }: { size?: number }) {
     };
     window.addEventListener("pointermove", onMove, { passive: true });
     return () => window.removeEventListener("pointermove", onMove);
-  }, [x, y]);
+  }, [x, y, active, reduce, fine]);
 
   return (
     <div ref={ref} style={{ width: size, height: size }} className="relative">
@@ -47,12 +58,8 @@ export function Memoji({ size = 112 }: { size?: number }) {
         aria-hidden
         className="absolute inset-0 rounded-full bg-sky-500/10 blur-[35px]"
       />
-      <motion.div style={{ x: sx, y: sy, rotate }} className="relative h-full w-full">
-        <motion.div
-          className="h-full w-full"
-          animate={missing ? {} : { y: [0, -6, 0] }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-        >
+      <motion.div style={{ transform }} className="relative h-full w-full">
+        <div className={missing || reduce ? "h-full w-full" : "memoji-float h-full w-full"} style={{ animationPlayState: active ? "running" : "paused" }}>
           {!missing ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -69,7 +76,7 @@ export function Memoji({ size = 112 }: { size?: number }) {
               FM
             </div>
           )}
-        </motion.div>
+        </div>
       </motion.div>
     </div>
   );
@@ -86,18 +93,21 @@ export function CursorGlow() {
   const sx = useSpring(x, { stiffness: 55, damping: 18, mass: 1.2 });
   const sy = useSpring(y, { stiffness: 55, damping: 18, mass: 1.2 });
   const [enabled, setEnabled] = useState(false);
+  const reduce = useReducedMotion();
+  const transform = useMotionTemplate`translate3d(${sx}px, ${sy}px, 0)`;
 
   useEffect(() => {
-    if (window.matchMedia("(pointer: coarse)").matches) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    setEnabled(true);
-    const onMove = (e: PointerEvent) => {
-      x.set(e.clientX - 300);
-      y.set(e.clientY - 300);
-    };
+    const media = window.matchMedia("(hover: hover) and (pointer: fine)");
+    const read = () => setEnabled(media.matches && !reduce);
+    read(); media.addEventListener("change", read);
+    return () => media.removeEventListener("change", read);
+  }, [reduce]);
+  useEffect(() => {
+    if (!enabled) return;
+    const onMove = (e: PointerEvent) => { x.set(e.clientX - 300); y.set(e.clientY - 300); };
     window.addEventListener("pointermove", onMove, { passive: true });
     return () => window.removeEventListener("pointermove", onMove);
-  }, [x, y]);
+  }, [enabled, x, y]);
 
   if (!enabled) return null;
   return (
@@ -105,8 +115,7 @@ export function CursorGlow() {
       aria-hidden
       className="pointer-events-none fixed left-0 top-0 z-0 h-[600px] w-[600px] rounded-full"
       style={{
-        x: sx,
-        y: sy,
+        transform,
         background:
           "radial-gradient(circle, rgba(0,163,255,0.14) 0%, rgba(0,163,255,0.05) 40%, transparent 70%)",
       }}

@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useActiveAnimation } from "@/lib/use-active-animation";
+import { useEffect, useState } from "react";
 import { Eyebrow, Reveal } from "@/components/motion";
 import { Memoji, CursorGlow } from "@/components/media";
-import { LiquidButton, GlassFilter } from "@/components/ui/liquid-glass-button";
+import { SiteHeader } from "@/components/site-header";
+import { ArrowDown, ArrowUpRight } from "lucide-react";
 import { ContactForm } from "@/components/contact-form";
 import { About } from "@/components/about";
 import { PathTimeline } from "@/components/path-timeline";
@@ -15,8 +17,8 @@ import { answerQuestion } from "@/lib/chatbot";
 import type { ChatAnswer } from "@/lib/chatbot";
 import { StreamingAnswer } from "@/components/chat-answer";
 import { techTags } from "@/lib/content";
-import { LocaleProvider, useLocale, useSite } from "@/lib/locale";
-import type { Locale } from "@/lib/copy";
+import { LocaleProvider, useSite } from "@/lib/locale";
+
 
 function Glow({ className }: { className: string }) {
   return <div aria-hidden className={`pointer-events-none absolute rounded-full ${className}`} />;
@@ -31,13 +33,15 @@ function Marquee({
   duration: string;
   label: string;
 }) {
+  const { ref, active } = useActiveAnimation<HTMLDivElement>();
   return (
     <div
+      ref={ref}
       aria-label={label}
       className="marquee-paused relative w-full overflow-hidden border-y border-line bg-card/30 py-2"
       style={{ ["--marquee-duration" as string]: duration }}
     >
-      <div className="marquee-track gap-0">
+      <div className="marquee-track gap-0" style={{animationPlayState: active ? "running" : "paused"}}>
         <div className="flex shrink-0 items-center">{children}</div>
         <div className="flex shrink-0 items-center" aria-hidden>
           {children}
@@ -55,39 +59,13 @@ export default function Home() {
   );
 }
 
-function LocaleSwitch() {
-  const { locale, setLocale } = useLocale();
-  const options: Locale[] = ["it", "en"];
-  return (
-    <div
-      role="group"
-      aria-label="Language"
-      className="relative z-10 flex items-center gap-0.5 rounded-full border border-white/10 bg-white/[0.04] p-0.5"
-    >
-      {options.map((option, index) => (
-        <span key={option} className="flex items-center">
-          {index > 0 && <span aria-hidden className="mx-0.5 h-3 w-px bg-white/15" />}
-          <button
-            type="button"
-            onClick={() => setLocale(option)}
-            aria-pressed={locale === option}
-            className={`rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-[0.08em] transition-colors duration-150 ${
-              locale === option ? "bg-primary text-white" : "text-muted hover:text-ink"
-            }`}
-          >
-            {option}
-          </button>
-        </span>
-      ))}
-    </div>
-  );
-}
-
 function Portfolio() {
   const site = useSite();
-  const { t, profile } = site;
+  const { t, profile, locale } = site;
   const [query, setQuery] = useState("");
   const [answer, setAnswer] = useState<ChatAnswer | null>(null);
+
+  useEffect(() => { setAnswer(null); }, [locale]);
 
   const runAsk = (q: string) => {
     if (!q.trim()) return;
@@ -99,81 +77,42 @@ function Portfolio() {
   return (
     <div id="top" className="relative min-h-screen overflow-x-clip bg-abyss text-ink">
       <CursorGlow />
-      {/* ── Nav liquid glass ────────────────── */}
-      <header className="fixed inset-x-0 top-0 z-50 flex justify-center px-4 pt-4">
-        <nav className="group relative flex h-14 w-full max-w-3xl items-center justify-between gap-1 overflow-hidden md:gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 shadow-[0_8px_32px_rgba(0,0,0,0.35)] backdrop-blur-xl transition-colors duration-300 hover:bg-white/[0.09]">
-          {/* rifrazione liquid glass */}
-          <div
-            aria-hidden
-            className="absolute inset-0 rounded-full"
-            style={{ backdropFilter: 'url("#container-glass")' }}
-          />
-          <GlassFilter />
-          <a
-            href="#top"
-            className="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-[13px] font-bold text-white"
-            aria-label="Home"
-          >
-            F
-          </a>
-          <div className="relative z-10 hidden items-center gap-1 md:flex">
-            {site.navLinks.map((l) => (
-              <a
-                key={l.href}
-                href={l.href}
-                className="rounded-full px-4 py-2 text-sm font-semibold text-muted transition-colors duration-150 hover:text-ink"
-              >
-                {l.label}
-              </a>
-            ))}
-          </div>
-          <div className="relative z-10 flex items-center gap-1 md:hidden">
-            {site.navLinks.slice(1, 3).map((l) => (
-              <a
-                key={l.href}
-                href={l.href}
-                className="whitespace-nowrap rounded-full px-2.5 py-2 text-[13px] font-semibold text-muted hover:text-ink"
-              >
-                {l.label}
-              </a>
-            ))}
-          </div>
-          <div className="relative z-10 flex items-center gap-2">
-            <LiquidButton
-              size="sm"
-              onClick={() => document.querySelector("#contact")?.scrollIntoView({ behavior: "smooth" })}
-            >
-              {t.contact.navCta}
-            </LiquidButton>
-            <LocaleSwitch />
-          </div>
-        </nav>
-      </header>
+      <SiteHeader />
 
-      <main className="relative z-10 mx-auto w-full max-w-[1190px] px-5 pt-28 md:px-12">
+      <main id="main-content" tabIndex={-1} className="relative z-10 mx-auto w-full max-w-[1190px] px-5 pt-28 md:px-12">
         {/* ── Hero AI-chat card ─────────────── */}
         <Reveal>
-          <section className="relative overflow-hidden rounded-frost border border-white/10 bg-white/[0.02] p-6 shadow-2xl backdrop-blur-xl md:p-10">
+          <section id="intro" className="relative overflow-hidden rounded-frost border border-white/10 bg-white/[0.02] p-6 shadow-2xl backdrop-blur-xl md:p-10">
             <Glow className="left-1/4 top-0 h-32 w-32 bg-sky-500/10 blur-[35px]" />
             <div className="relative">
-              <div className="flex justify-center">
-                <Memoji size={184} />
+              <div className="hero-avatar flex justify-center">
+                <Memoji size={160} />
               </div>
               <div className="mt-2 text-center">
                 <Eyebrow>{profile.role} — {profile.location}</Eyebrow>
               </div>
-              <h1 className="mt-3 text-[32px] font-bold leading-[35.2px] tracking-[-0.64px] md:text-5xl md:leading-tight">
+              <h1 className="mt-5 text-balance text-[clamp(2rem,5vw,3.5rem)] font-bold leading-[1.1] tracking-[-0.03em]">
                 {t.hero.greeting} <span className="text-[#7dd3fc]">{profile.name}</span>
               </h1>
-              <p className="mt-4 max-w-[65ch] text-lg leading-[31.5px] tracking-[-0.18px] text-muted">
+              <p className="mt-4 max-w-[65ch] text-base leading-7 text-muted sm:text-lg sm:leading-8">
                 {t.hero.description}
               </p>
-              <div className="mt-6 flex flex-wrap gap-2">
+              <div className="mt-6 flex flex-wrap items-center gap-3">
+                <a href="#projects" className="action-link rounded-full bg-primary px-5 py-3 text-sm font-semibold text-[#07121c]">
+                  {locale === "it" ? "Esplora i progetti" : "Explore my work"}<ArrowDown aria-hidden className="size-4" />
+                </a>
+                <a href="https://github.com/francescomonticone" target="_blank" rel="noreferrer" className="action-link rounded-full border border-white/15 px-5 py-3 text-sm font-semibold text-ink">
+                  <GithubIcon className="size-4" /> GitHub <ArrowUpRight aria-hidden className="size-3.5 text-muted" />
+                </a>
+              </div>
+              <div className="mt-8 border-t border-white/10 pt-5">
+              <p className="text-xs text-muted">{locale === "it" ? "Da dove vuoi iniziare? Chiedimi di Francesco." : "Where would you like to start? Ask about Francesco."}</p>
+              <div className="mt-3 flex flex-wrap gap-2">
                 {t.hero.chips.map((c) => (
                   <button
                     key={c}
                     onClick={() => ask(c)}
-                    className="rounded-full border border-line bg-carddeep px-4 py-1.5 text-sm font-semibold text-muted transition-colors duration-150 hover:text-ink"
+                    className="rounded-full border border-line bg-carddeep min-h-11 px-4 py-2 text-sm font-medium text-muted transition-colors duration-150 hover:text-ink"
                   >
                     {c}
                   </button>
@@ -191,12 +130,12 @@ function Portfolio() {
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder={t.hero.askPlaceholder.replace("{name}", profile.firstName)}
                   aria-label={t.hero.askAria}
-                  className="w-full bg-transparent text-base text-ink placeholder:text-faint focus:outline-none"
+                  className="min-w-0 w-full bg-transparent text-base text-ink placeholder:text-faint focus:outline-none"
                 />
                 <button
                   type="submit"
                   disabled={!query.trim()}
-                  className="shrink-0 rounded-full bg-primary px-5 py-2 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-40 disabled:hover:translate-y-0"
+                  className="shrink-0 rounded-full bg-primary px-5 py-2 text-sm font-semibold text-[#07121c] transition-colors duration-200 hover:bg-[#7dd3fc] disabled:opacity-40"
                 >
                   {t.hero.ask}
                 </button>
@@ -210,6 +149,7 @@ function Portfolio() {
                   }}
                 />
               )}
+              </div>
             </div>
           </section>
         </Reveal>
@@ -279,7 +219,7 @@ function Portfolio() {
                   href="https://github.com/francescomonticone"
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_32px_rgba(0,163,255,0.25)]"
+                  className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-[#07121c] transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_32px_rgba(0,163,255,0.25)]"
                 >
                   <GithubIcon className="h-4 w-4" />
                   GitHub
@@ -288,7 +228,7 @@ function Portfolio() {
                   href="https://www.linkedin.com/in/francesco-monticone-04412b2a0/"
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-2 rounded-full bg-[#0A66C2] px-6 py-3 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_32px_rgba(10,102,194,0.45)]"
+                  className="inline-flex items-center gap-2 rounded-full bg-[#0A66C2] px-6 py-3 text-sm font-semibold text-white transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_32px_rgba(10,102,194,0.45)]"
                 >
                   <LinkedinIcon className="h-4 w-4" />
                   LinkedIn

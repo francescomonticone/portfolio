@@ -17,7 +17,7 @@ async function loadLogoTexture(path: string): Promise<THREE.Texture> {
   let w = 256;
   let h = 256;
   if (vb) {
-    const [, , , vw, vh] = vb[1].trim().split(/\s+/).map(Number);
+    const [, , vw, vh] = vb[1].trim().split(/\s+/).map(Number);
     if (vw > 0 && vh > 0) {
       const s = 256 / Math.max(vw, vh);
       w = Math.round(vw * s);
@@ -44,15 +44,17 @@ function useLogoTexture(logo: string | null): THREE.Texture | null {
   useEffect(() => {
     if (!logo) return;
     let live = true;
+    let texture: THREE.Texture | null = null;
     loadLogoTexture(logo)
       .then((t) => {
-        if (live) setTex(t);
+        if (live) { texture = t; setTex(t); } else t.dispose();
       })
       .catch(() => {
         if (live) setTex(null);
       });
     return () => {
       live = false;
+      texture?.dispose();
     };
   }, [logo]);
 
@@ -292,7 +294,7 @@ function System({
 
 
 /* ---------- scena ---------- */
-export function SkillCanvas() {
+export function SkillCanvas({ active = true }: { active?: boolean }) {
   const site = useSite();
   const orbitLabel = (id: OrbitId) => site.t.skills.orbits[id];
   const [hoveredId, setHoveredId] = useState<string | null>(null);
@@ -307,14 +309,15 @@ export function SkillCanvas() {
     <div className="relative overflow-hidden rounded-bento border border-line bg-abyss">
       <div className="h-[560px] w-full lg:h-[640px]">
         <Canvas
-          dpr={[1, 1.75]}
+          dpr={[1, 1.5]}
+          frameloop={active ? "always" : "never"}
           camera={{ position: [0, 4.6, 11.5], fov: 50 }}
           gl={{ antialias: true }}
           onPointerMissed={() => setSelected(null)}
         >
           <color attach="background" args={["#0a0a0f"]} />
           {/* stelle sobrie sullo sfondo */}
-          <Stars radius={45} depth={25} count={1300} factor={2.4} saturation={0} fade speed={0.5} />
+          <Stars radius={45} depth={25} count={700} factor={2.4} saturation={0} fade speed={0.5} />
           <ambientLight intensity={1.5} />
           <directionalLight position={[5, 8, 5]} intensity={2.1} />
           <directionalLight position={[-6, 3, -6]} intensity={0.5} color="#7dd3fc" />
@@ -336,7 +339,8 @@ export function SkillCanvas() {
               onClick={() => setFocused(active ? null : id)}
               title={id ? orbitLabel(id) : site.t.skills.allLevels}
               aria-label={id ? orbitLabel(id) : site.t.skills.allLevels}
-              className={`flex h-8 w-8 items-center justify-center rounded-full text-[11px] font-bold transition-all duration-200 ${
+              aria-pressed={active}
+              className={`flex h-11 w-11 items-center justify-center rounded-full text-[11px] font-bold transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-200 ${
                 active
                   ? "bg-primary text-white shadow-[0_0_16px_rgba(0,163,255,0.5)]"
                   : "text-muted hover:bg-white/[0.06] hover:text-ink"
@@ -361,7 +365,7 @@ export function SkillCanvas() {
             <button
               onClick={() => setSelected(null)}
               aria-label={site.t.skills.close}
-              className="rounded-full border border-line px-2 py-0.5 text-xs text-muted hover:text-ink"
+              className="min-h-11 min-w-11 rounded-full border border-line px-2 py-0.5 text-xs text-muted hover:text-ink"
             >
               ✕
             </button>

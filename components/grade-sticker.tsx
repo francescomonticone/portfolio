@@ -115,6 +115,8 @@ export function GradeSticker() {
               drawing.current = false;
               if (progress() > 0.55) setRevealed(true);
             }}
+            onPointerCancel={() => { drawing.current = false; }}
+            onLostPointerCapture={() => { drawing.current = false; }}
             onPointerLeave={() => {
               drawing.current = false;
             }}
@@ -127,7 +129,7 @@ export function GradeSticker() {
       <button
         type="button"
         onClick={() => setRevealed(true)}
-        className="mt-4 text-[11px] font-semibold text-muted underline-offset-4 transition-colors hover:text-ink hover:underline"
+        className="mt-4 min-h-11 text-xs font-semibold text-muted underline-offset-4 transition-colors hover:text-ink hover:underline"
       >
         {revealed ? sticker.revealed : started ? sticker.reveal : sticker.scratch}
       </button>

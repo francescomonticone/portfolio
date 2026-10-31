@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useInView, useReducedMotion } from "framer-motion";
 import { ArrowUpRight, GitBranch, Layers, X, Zap } from "lucide-react";
 import { useSite } from "@/lib/locale";
 
@@ -33,6 +33,8 @@ function hexPoints(cx: number, cy: number) {
 
 function HexGrid({ mini = false }: { mini?: boolean }) {
   const reduce = useReducedMotion();
+  const ref = useRef<SVGSVGElement>(null);
+  const visible = useInView(ref, { margin: "80px" });
   const { t } = useSite();
   const id = useId().replace(/:/g, "");
   const start = center(1, 0);
@@ -40,6 +42,7 @@ function HexGrid({ mini = false }: { mini?: boolean }) {
 
   return (
     <svg
+      ref={ref}
       viewBox="0 0 300 214"
       role="img"
       aria-label={`${t.dro.gridLabel} — ${t.dro.exitCost}, ${t.dro.blocked}, ${t.dro.airRoute}, ${t.dro.query}`}
@@ -142,7 +145,7 @@ function HexGrid({ mini = false }: { mini?: boolean }) {
         strokeDasharray="4 4"
         opacity="0.85"
       >
-        {!reduce && (
+        {!reduce && visible && (
           <animate attributeName="stroke-dashoffset" from="0" to="-16" dur="1.6s" repeatCount="indefinite" />
         )}
       </path>
@@ -164,11 +167,11 @@ function HexGrid({ mini = false }: { mini?: boolean }) {
   );
 }
 
-export function DroPreview() {
+export function DroPreview({ cover = false }: { cover?: boolean }) {
   const { t } = useSite();
   return (
-    <div className="relative h-[224px] overflow-hidden rounded-xl border border-white/10 bg-[radial-gradient(circle_at_70%_20%,rgba(0,163,255,0.16),transparent_55%)]">
-      <div className="absolute inset-x-3 inset-y-2">
+    <div className={`relative overflow-hidden bg-[#0b1521] ${cover ? "size-full" : "h-[224px] rounded-xl border border-white/10"}`}>
+      <div className="absolute inset-x-4 bottom-1 top-7">
         <HexGrid mini />
       </div>
       <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">
@@ -187,39 +190,40 @@ export function DroPreview() {
 function ModalContent({ onClose }: { onClose: () => void }) {
   const { t } = useSite();
   const [tab, setTab] = useState<"problem" | "solution">("problem");
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const reduce = useReducedMotion();
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", onKey);
+    const previousFocus = document.activeElement as HTMLElement | null;
+    const dialog = dialogRef.current;
+    if (!dialog?.open) dialog?.showModal();
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
-      document.removeEventListener("keydown", onKey);
+      dialog?.close();
+      previousFocus?.focus({ preventScroll: true });
       document.body.style.overflow = previous;
     };
   }, [onClose]);
 
   return (
-    <motion.div
-      className="fixed inset-0 z-[100] flex items-end justify-center bg-black/70 p-0 backdrop-blur-md sm:items-center sm:p-6"
+    <motion.dialog
+      ref={dialogRef}
+      aria-label={`${t.dro.title} — ${t.dro.subtitle}`}
+      onCancel={(event) => { event.preventDefault(); onClose(); }}
+      className="fixed inset-0 m-0 flex h-dvh max-h-none w-full max-w-none items-end justify-center border-0 bg-black/70 p-0 text-ink backdrop-blur-md backdrop:bg-transparent sm:items-center sm:p-6"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      onClick={onClose}
-      role="presentation"
+      onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}
     >
       <motion.div
-        role="dialog"
-        aria-modal="true"
-        aria-label={`${t.dro.title} — ${t.dro.subtitle}`}
-        initial={{ opacity: 0, y: 32, scale: 0.98 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 24, scale: 0.985 }}
-        transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+        initial={{ opacity: 0, transform: reduce ? "none" : "translateY(24px) scale(.98)" }}
+        animate={{ opacity: 1, transform: reduce ? "none" : "translateY(0px) scale(1)" }}
+        exit={{ opacity: 0, transform: reduce ? "none" : "translateY(24px) scale(.98)" }}
+        transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
         onClick={(e) => e.stopPropagation()}
-        className="relative flex max-h-[92vh] w-full max-w-[1080px] flex-col overflow-hidden rounded-t-[28px] border border-white/12 bg-[#0c0f15] shadow-[0_30px_120px_rgba(0,0,0,0.65)] sm:rounded-[28px]"
+        className="relative flex max-h-[92dvh] w-full max-w-[1080px] flex-col overflow-hidden rounded-t-[28px] border border-white/12 bg-[#0c0f15] shadow-[0_30px_120px_rgba(0,0,0,0.65)] sm:rounded-[28px]"
       >
         <div className="relative border-b border-white/[0.08] px-5 py-5 md:px-7 md:py-6">
           <div
@@ -242,7 +246,7 @@ function ModalContent({ onClose }: { onClose: () => void }) {
               type="button"
               onClick={onClose}
               aria-label={t.dro.close}
-              className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-white/10 bg-white/[0.05] text-muted transition-colors hover:border-white/25 hover:text-ink"
+              className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-white/10 bg-white/[0.05] text-muted transition-colors hover:border-white/25 hover:text-ink"
             >
               <X className="h-4 w-4" />
             </button>
@@ -270,9 +274,9 @@ function ModalContent({ onClose }: { onClose: () => void }) {
             {tab === "problem" ? (
               <motion.div
                 key="problem"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
+                initial={{ opacity: 0, transform: reduce ? "none" : "translateY(8px)" }}
+                animate={{ opacity: 1, transform: reduce ? "none" : "translateY(0px)" }}
+                exit={{ opacity: 0, transform: reduce ? "none" : "translateY(-6px)" }}
                 transition={{ duration: 0.22 }}
                 className="grid gap-6 md:grid-cols-[1.05fr_0.95fr] md:items-center"
               >
@@ -316,9 +320,9 @@ function ModalContent({ onClose }: { onClose: () => void }) {
             ) : (
               <motion.div
                 key="solution"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
+                initial={{ opacity: 0, transform: reduce ? "none" : "translateY(8px)" }}
+                animate={{ opacity: 1, transform: reduce ? "none" : "translateY(0px)" }}
+                exit={{ opacity: 0, transform: reduce ? "none" : "translateY(-6px)" }}
                 transition={{ duration: 0.22 }}
                 className="grid gap-6 md:grid-cols-[0.95fr_1.05fr] md:items-start"
               >
@@ -383,7 +387,7 @@ function ModalContent({ onClose }: { onClose: () => void }) {
           </div>
         </div>
       </motion.div>
-    </motion.div>
+    </motion.dialog>
   );
 }
 
@@ -393,20 +397,21 @@ export function DroCaseStudy() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
+  const close = useCallback(() => setOpen(false), []);
 
   return (
     <>
       <button
         type="button"
-        onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-2 rounded-full border border-primary/35 bg-primary/10 px-5 py-2.5 text-sm font-bold text-primary transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/15 hover:shadow-[0_0_26px_rgba(0,163,255,0.25)]"
+        onClick={(event) => { event.currentTarget.focus({ preventScroll: true }); setOpen(true); }}
+        className="inline-flex items-center gap-2 rounded-full border border-primary/35 bg-primary/10 px-5 py-2.5 text-sm font-bold text-primary transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-200 hover:-translate-y-0.5 hover:bg-primary/15 hover:shadow-[0_0_26px_rgba(0,163,255,0.25)]"
       >
         {t.dro.cta}
         <ArrowUpRight className="h-3.5 w-3.5" />
       </button>
       {mounted &&
         createPortal(
-          <AnimatePresence>{open && <ModalContent onClose={() => setOpen(false)} />}</AnimatePresence>,
+          <AnimatePresence>{open && <ModalContent onClose={close} />}</AnimatePresence>,
           document.body,
         )}
     </>

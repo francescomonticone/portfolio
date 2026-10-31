@@ -55,6 +55,7 @@ export type UiCopy = {
     intro: (n: number) => string;
     privateBadge: string;
     github: string;
+    wheelLabel: string;
   };
   dro: {
     cta: string;
@@ -197,9 +198,10 @@ export const ui: Record<Locale, UiCopy> = {
     featured: {
       titleA: "Featured",
       titleB: "Projects",
-      intro: (n) => `${n} dossiers, one scroll. Academic code stays private until term end.`,
+      intro: (n) => `${n} projects, from software to robotics. Pick a project and explore how it works.`,
       privateBadge: "code private · academic term",
       github: "GitHub",
+      wheelLabel: "Selected work",
     },
     dro: {
       cta: "How I solved it",
@@ -296,7 +298,7 @@ export const ui: Record<Locale, UiCopy> = {
         sentBody: "Thanks for reaching out — I'll get back to you soon.",
         sendAnother: "Send another",
         error: "Couldn't send — check your connection and try again, or use GitHub/LinkedIn above.",
-        notConfigured: "Form endpoint not configured yet (NEXT_PUBLIC_WEB3FORMS_KEY).",
+        notConfigured: "The contact form is temporarily unavailable. You can reach me on LinkedIn above.",
       },
     },
     chat: { tryNext: "Try next:" },
@@ -352,9 +354,10 @@ export const ui: Record<Locale, UiCopy> = {
     featured: {
       titleA: "Progetti",
       titleB: "in evidenza",
-      intro: (n) => `${n} dossier, uno scroll. Il codice accademico resta privato fino alla fine del semestre.`,
+      intro: (n) => `${n} progetti, dal software alla robotica. Scegli un progetto e scopri come funziona.`,
       privateBadge: "codice privato · sessione accademica",
       github: "GitHub",
+      wheelLabel: "Lavori scelti",
     },
     dro: {
       cta: "Come l'ho risolto",
@@ -451,7 +454,7 @@ export const ui: Record<Locale, UiCopy> = {
         sentBody: "Grazie per avermi scritto — ti rispondo presto.",
         sendAnother: "Invia un altro",
         error: "Invio non riuscito — controlla la connessione e riprova, oppure usa GitHub/LinkedIn qui sopra.",
-        notConfigured: "Endpoint del form non ancora configurato (NEXT_PUBLIC_WEB3FORMS_KEY).",
+        notConfigured: "Il modulo è temporaneamente non disponibile. Puoi contattarmi su LinkedIn qui sopra.",
       },
     },
     chat: { tryNext: "Prova con:" },

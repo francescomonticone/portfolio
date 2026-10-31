@@ -25,8 +25,10 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>("en");
 
   useEffect(() => {
-    const saved = window.localStorage.getItem(STORAGE_KEY);
-    if (saved === "it" || saved === "en") setLocaleState(saved);
+    try {
+      const saved = window.localStorage.getItem(STORAGE_KEY);
+      if (saved === "it" || saved === "en") setLocaleState(saved);
+    } catch { /* The portfolio works when browser storage is unavailable. */ }
   }, []);
 
   useEffect(() => {
@@ -35,7 +37,7 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
 
   const setLocale = useCallback((next: Locale) => {
     setLocaleState(next);
-    window.localStorage.setItem(STORAGE_KEY, next);
+    try { window.localStorage.setItem(STORAGE_KEY, next); } catch { /* Keep the in-memory choice. */ }
   }, []);
 
   const value = useMemo(

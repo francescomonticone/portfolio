@@ -17,6 +17,7 @@ export function ContactForm() {
 
   const submit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (status === "sending") return;
     if (!key) {
       setStatus("error");
       return;
@@ -25,14 +26,17 @@ export function ContactForm() {
     const data = Object.fromEntries(new FormData(form).entries());
     if (data.company_website) return; // honeypot
     setStatus("sending");
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 15000);
     try {
       const res = await fetch("https://api.web3forms.com/submit", {
         method: "POST",
+        signal: controller.signal,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ access_key: key, subject: "Portfolio: contact", ...data }),
       });
       const json = await res.json();
-      if (json.success) {
+      if (res.ok && json.success) {
         setStatus("sent");
         form.reset();
       } else {
@@ -40,16 +44,18 @@ export function ContactForm() {
       }
     } catch {
       setStatus("error");
+    } finally {
+      window.clearTimeout(timeout);
     }
   };
 
   const field =
-    "w-full rounded-xl border border-line bg-carddeep px-4 py-3 text-[15px] text-ink placeholder:text-faint focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30";
+    "w-full rounded-xl border border-line bg-carddeep px-4 py-3 text-base text-ink placeholder:text-faint focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30";
   const label = "mb-1.5 block text-xs font-semibold uppercase tracking-[0.16em] text-muted";
 
   if (status === "sent") {
     return (
-      <div className="rounded-bento border border-line bg-card p-6 text-center">
+      <div className="rounded-bento border border-line bg-card p-6 text-center" role="status">
         <p className="text-xl font-bold text-ink">{f.sentTitle}</p>
         <p className="mt-2 text-[15px] text-muted">{f.sentBody}</p>
         <Button variant="ghost" size="sm" className="mt-4" onClick={() => setStatus("idle")}>
@@ -60,7 +66,7 @@ export function ContactForm() {
   }
 
   return (
-    <form onSubmit={submit} className="rounded-bento border border-line bg-card p-5 md:p-6">
+    <form onSubmit={submit} aria-busy={status === "sending"} className="rounded-bento border border-line bg-card p-5 md:p-6">
       {/* honeypot anti-spam */}
       <input type="text" name="company_website" className="hidden" tabIndex={-1} autoComplete="off" />
 
@@ -88,11 +94,11 @@ export function ContactForm() {
           required
           rows={4}
           placeholder={f.messagePlaceholder}
-          className={`${field} resize-none`}
+          className={`${field} min-h-32 resize-y`}
         />
       </div>
 
-      <LiquidButton type="submit" size="lg" className="mt-5 w-full" disabled={status === "sending"}>
+      <LiquidButton type="submit" size="lg" className="mt-5 w-full" disabled={status === "sending" || !key}>
         {status === "sending" ? f.sending : f.send}
       </LiquidButton>
 
@@ -102,7 +108,7 @@ export function ContactForm() {
         </p>
       )}
       {status === "error" && key && (
-        <p className="mt-3 text-sm text-red-400">Couldn&apos;t send — check your connection and try again, or use GitHub/LinkedIn above.</p>
+        <p role="alert" className="mt-3 text-sm text-red-300">{f.error}</p>
       )}
     </form>
   );

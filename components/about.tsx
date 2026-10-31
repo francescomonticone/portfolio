@@ -1,5 +1,6 @@
 "use client";
 
+import { useActiveAnimation } from "@/lib/use-active-animation";
 import { motion, useReducedMotion } from "framer-motion";
 import {
   BadgeCheck,
@@ -67,6 +68,7 @@ function Label({ children }: { children: React.ReactNode }) {
 
 export function About() {
   const reduce = useReducedMotion();
+  const { ref, active } = useActiveAnimation<HTMLElement>();
   const site = useSite();
   const { t, profile, semesterCourses, personalTrack } = site;
   const focusAreas = t.about.focusAreas.map((area) => ({
@@ -75,7 +77,7 @@ export function About() {
   }));
 
   return (
-    <section id="about" className="mt-24 scroll-mt-24">
+    <section ref={ref} id="about" className="mt-24 scroll-mt-24">
       <Reveal>
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">{t.about.eyebrow}</p>
         <h2 className="mt-2 text-4xl font-bold leading-tight tracking-[-1.2px] md:text-[60px] md:leading-[72px]">
@@ -112,7 +114,7 @@ export function About() {
         {/* Focus */}
         <Reveal className="lg:col-span-5">
           <GlassCard className="flex h-full flex-col justify-between p-5">
-            {!reduce && (
+            {!reduce && active && (
               <motion.div
                 aria-hidden
                 className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-[conic-gradient(from_0deg,transparent,rgba(0,163,255,0.5),transparent_42%)] blur-2xl"
@@ -222,7 +224,7 @@ export function About() {
             </div>
 
             <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-abyss/50 p-4">
-              {!reduce && (
+              {!reduce && active && (
                 <motion.div
                   aria-hidden
                   className="pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full border border-primary/25"
@@ -240,7 +242,7 @@ export function About() {
                     return (
                       <li
                         key={label}
-                        className="flex items-center gap-3 rounded-xl border border-white/[0.07] bg-white/[0.03] px-3 py-2.5 transition-all duration-200 hover:border-primary/30 hover:bg-primary/[0.07]"
+                        className="flex items-center gap-3 rounded-xl border border-white/[0.07] bg-white/[0.03] px-3 py-2.5 transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-200 hover:border-primary/30 hover:bg-primary/[0.07]"
                       >
                         <Icon className="h-4 w-4 text-primary" strokeWidth={1.8} aria-hidden />
                         <span className="text-[13px] font-medium text-ink">{label}</span>

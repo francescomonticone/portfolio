@@ -1,22 +1,17 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
-import { ArrowUpRight, Cpu, Lock, Waves } from "lucide-react";
-import { DroCaseStudy, DroPreview } from "@/components/dro-case-study";
+import { useActiveAnimation } from "@/lib/use-active-animation";
+import { useEffect, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { ArrowUpRight, Lock, Waves } from "lucide-react";
+import { ProjectArtwork, HardwareArtwork } from "@/components/project-artwork";
+import { DroCaseStudy } from "@/components/dro-case-study";
 import { Reveal } from "@/components/motion";
 import { GithubIcon } from "@/components/github-icon";
 import { LinkedinIcon } from "@/components/linkedin-icon";
+import { WorksWheel } from "@/components/ui/works-wheel";
 import { type Project } from "@/lib/content";
 import { useSite } from "@/lib/locale";
-
-/* ---------------------------------------------------------------- *
- * FEATURED — deck orizzontale guidato dallo scroll verticale.
- * Riordinare o aggiungere progetti = modificare `projects` in
- * lib/content.ts. Altezza e corsa si adattano da sole al numero di card.
- * ---------------------------------------------------------------- */
-
-const CARD_WIDTH = "w-[84vw] sm:w-[440px] lg:w-[500px]";
 
 /** Carosello foto: crossfade ogni 4s, pausa on-hover, statico con reduced-motion. */
 function PhotoCarousel({
@@ -31,17 +26,18 @@ function PhotoCarousel({
   overlay?: React.ReactNode;
 }) {
   const [idx, setIdx] = useState(0);
+  const { ref, active } = useActiveAnimation<HTMLDivElement>();
   const [paused, setPaused] = useState(false);
   const reduce = useReducedMotion();
 
   useEffect(() => {
-    if (photos.length < 2 || reduce || paused) return;
+    if (photos.length < 2 || reduce || paused || !active) return;
     const t = setInterval(() => setIdx((i) => (i + 1) % photos.length), 4000);
     return () => clearInterval(t);
-  }, [photos.length, reduce, paused]);
+  }, [photos.length, reduce, paused, active]);
 
   return (
-    <div>
+    <div ref={ref}>
       <div
         className="relative flex h-48 flex-col justify-center overflow-hidden rounded-xl border border-white/10 bg-black/40"
         onMouseEnter={() => setPaused(true)}
@@ -69,11 +65,10 @@ function PhotoCarousel({
             photos.map((src, i) => (
               <button
                 key={src}
-                aria-label={`Photo ${i + 1}`}
+                aria-label={`${title} — ${i + 1}`}
+                aria-pressed={i === idx}
                 onClick={() => setIdx(i)}
-                className={`h-1.5 rounded-full transition-all duration-300 ${
-                  i === idx ? "w-5 bg-primary" : "w-1.5 bg-line hover:bg-muted"
-                }`}
+                className={`relative h-11 w-8 rounded-full after:absolute after:inset-x-2 after:top-5 after:h-1.5 after:rounded-full ${i === idx ? "after:bg-primary" : "after:bg-line"}`}
               />
             ))}
         </div>
@@ -86,74 +81,103 @@ function PhotoCarousel({
   );
 }
 
-function ProjectCard({ project }: { project: Project }) {
-  const { t } = useSite();
-  const { id, type, title, stack, description, points, codePublic, academic, photos, logo, repo } =
-    project;
+function ProjectDetails({
+  project,
+  index,
+  goTo,
+}: {
+  project: Project;
+  index: number;
+  goTo: (index: number) => void;
+}) {
+  const { t, projects } = useSite();
+  const reduce = useReducedMotion();
+  const { id, type, title, stack, description, points, codePublic, academic, repo } = project;
 
   return (
-    <article className={`flex shrink-0 flex-col overflow-hidden rounded-3xl border border-white/10 bg-card ${CARD_WIDTH}`}>
-      {photos.length > 0 ? (
-        <div className="bg-black/40 p-2">
-          <PhotoCarousel title={title} photos={photos} logo={logo} />
-        </div>
-      ) : project.caseStudy === "dro" ? (
-        <div className="bg-black/40 p-2">
-          <DroPreview />
-        </div>
-      ) : (
-        <div className="relative flex h-[224px] flex-col justify-center overflow-hidden bg-abyss">
-          <div aria-hidden className="absolute -left-10 -top-10 h-56 w-56 rounded-full bg-sky-500/10 blur-[40px]" />
-          <div aria-hidden className="absolute -bottom-14 -right-10 h-56 w-56 rounded-full bg-[#00a3ff]/10 blur-3xl" />
-          <div className="relative flex items-center justify-between px-6">
-            <span className="text-8xl font-bold tracking-tight text-white/10">{id}</span>
-            <span className="text-right text-xs font-semibold uppercase tracking-[0.16em] text-[#7dd3fc]">
-              {stack.slice(0, 2).join(" · ")}
-            </span>
-          </div>
-        </div>
-      )}
-
-      <div className="flex flex-1 flex-col border-t border-white/[0.07] p-5 md:p-6">
-        <div className="flex flex-wrap items-center gap-3">
-          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">{type}</span>
-          {!codePublic && academic && (
-            <span className="rounded-full border border-line px-3 py-1 text-xs text-faint">
-              {t.featured.privateBadge}
-            </span>
-          )}
-        </div>
-        <h3 className="mt-2 text-2xl font-bold tracking-tight md:text-[28px]">{title}</h3>
-        <p className="mt-2 line-clamp-2 text-[14px] leading-relaxed text-muted">{description}</p>
-        <div className="mb-4 mt-auto flex flex-wrap gap-2 pt-4">
-          {stack.map((s) => (
-            <span key={s} className="rounded-full border border-line bg-carddeep px-3 py-1 text-xs font-medium text-muted">
-              {s}
-            </span>
-          ))}
-          {points.map((s) => (
-            <span key={s} className="rounded-full bg-white/[0.03] px-3 py-1 text-[13px] text-ink">
-              {s}
-            </span>
-          ))}
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {repo && (
-            <a
-              href={repo}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-bold text-black transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_24px_rgba(255,255,255,0.25)]"
-            >
-              <GithubIcon className="h-4 w-4" />
-              {t.featured.github}
-              <ArrowUpRight className="h-3.5 w-3.5" />
-            </a>
-          )}
-          {project.caseStudy === "dro" && <DroCaseStudy />}
-        </div>
+    <div className="flex h-full flex-col lg:min-h-[620px]">
+      <div className="flex items-baseline justify-between gap-4">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">{type}</span>
+        <span className="font-mono text-[11px] tabular-nums text-faint">
+          {id} / {String(projects.length).padStart(2, "0")}
+        </span>
       </div>
-    </article>
+
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={id}
+          initial={{ opacity: 0, transform: reduce ? "none" : "translateY(8px)" }}
+          animate={{ opacity: 1, transform: reduce ? "none" : "translateY(0px)" }}
+          exit={{ opacity: 0, transform: reduce ? "none" : "translateY(-6px)" }}
+          transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
+        >
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <h3 className="text-3xl font-bold leading-[1.08] tracking-tight md:text-[40px] md:leading-[1.05]">
+              {title}
+            </h3>
+            {!codePublic && academic && (
+              <span className="rounded-full border border-line px-3 py-1 text-xs text-faint">
+                {t.featured.privateBadge}
+              </span>
+            )}
+          </div>
+          <p className="mt-3 max-w-[46ch] text-[14px] leading-relaxed text-muted md:text-[15px]">
+            {description}
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {stack.map((s) => (
+              <span
+                key={s}
+                className="rounded-full border border-line bg-carddeep px-3 py-1 text-xs font-medium text-muted"
+              >
+                {s}
+              </span>
+            ))}
+            {points.map((s) => (
+              <span key={s} className="rounded-full bg-white/[0.03] px-3 py-1 text-[13px] text-ink">
+                {s}
+              </span>
+            ))}
+          </div>
+          <div className="mt-5 flex flex-wrap items-center gap-2">
+            {repo && (
+              <a
+                href={repo}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-bold text-black transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_24px_rgba(255,255,255,0.25)]"
+              >
+                <GithubIcon className="h-4 w-4" />
+                {t.featured.github}
+                <ArrowUpRight className="h-3.5 w-3.5" />
+              </a>
+            )}
+            {project.caseStudy === "dro" && <DroCaseStudy />}
+          </div>
+        </motion.div>
+      </AnimatePresence>
+
+      <ol className="mt-6 flex flex-col border-t border-white/10 pt-3 lg:mt-auto">
+        {projects.map((item, i) => (
+          <li key={item.id}>
+            <button
+              type="button"
+              onClick={() => goTo(i)}
+              aria-current={i === index ? "true" : undefined}
+              className={`project-index-button group flex min-h-11 w-full items-center gap-4 py-2 text-left text-[13px] transition-colors ${
+                i === index ? "text-ink" : "text-faint hover:text-muted"
+              }`}
+            >
+              <span
+                className="project-index-marker mr-2 h-px w-3 shrink-0 bg-white/25"
+              />
+              <span className="font-mono tabular-nums">{item.id}</span>
+              <span className="truncate">{item.title}</span>
+            </button>
+          </li>
+        ))}
+      </ol>
+    </div>
   );
 }
 
@@ -174,78 +198,32 @@ function SectionHead() {
 export function HorizontalProjects() {
   const site = useSite();
   const projects = site.projects;
-  const containerRef = useRef<HTMLDivElement>(null);
-  const trackRef = useRef<HTMLDivElement>(null);
-  const reduce = useReducedMotion();
-  const [range, setRange] = useState(0);
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start start", "end end"],
-  });
-
-  useLayoutEffect(() => {
-    const track = trackRef.current;
-    if (!track) return;
-    const measure = () => {
-      // Il deck vive dentro <main> centrato: la corsa deve tenere conto
-      // del suo offset, altrimenti l'ultima card resta fuori viewport.
-      const sticky = track.parentElement;
-      const offset = sticky ? sticky.getBoundingClientRect().left : 0;
-      setRange(Math.max(0, offset + track.scrollWidth - window.innerWidth));
-    };
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(track);
-    window.addEventListener("resize", measure);
-    if (document.fonts) {
-      document.fonts.ready.then(measure).catch(() => {});
-    }
-    return () => {
-      ro.disconnect();
-      window.removeEventListener("resize", measure);
-    };
-  }, []);
-
-  // Due soste: la prima lascia respirare il deck prima di partire,
-  // la seconda tiene l'ultima card completamente dentro lo schermo.
-  const x = useTransform(scrollYProgress, [0, 0.05, 0.88, 1], [0, 0, -range, -range]);
-  /** Cresce con il numero di card: aggiungi un progetto e lo scroll si allunga. */
-  const sectionHeight = `${96 + projects.length * 38}vh`;
-
-  if (reduce) {
-    return (
-      <section id="projects" className="mt-24 scroll-mt-24 px-5 md:px-12">
-        <SectionHead />
-        <div className="mt-8 flex flex-col gap-4">
-          {projects.map((project) => (
-            <ProjectCard key={project.id} project={project} />
-          ))}
-        </div>
-      </section>
-    );
-  }
 
   return (
-    <section
-      id="projects"
-      ref={containerRef}
-      className="relative scroll-mt-24"
-      style={{ height: sectionHeight }}
-    >
-      <div className="sticky top-0 flex h-screen flex-col justify-start pt-20 md:pt-24">
-        <div className="px-5 md:px-12">
-          <SectionHead />
-        </div>
-        <motion.div
-          ref={trackRef}
-          style={{ x }}
-          className="mt-6 flex w-max items-stretch gap-5 px-5 pb-6 md:px-12 [mask-image:linear-gradient(to_right,transparent,black_4%,black_100%)]"
-        >
-          {projects.map((project) => (
-            <ProjectCard key={project.id} project={project} />
-          ))}
-        </motion.div>
-      </div>
+    <section id="projects" className="mt-24 scroll-mt-28">
+      <SectionHead />
+      <WorksWheel
+        className="mt-8"
+        label={site.t.featured.wheelLabel}
+        controls={{
+          previous: site.locale === "it" ? "Progetto precedente" : "Previous project",
+          next: site.locale === "it" ? "Progetto successivo" : "Next project",
+          hint: site.locale === "it" ? "Trascina o usa le frecce per esplorare." : "Drag or use the arrows to explore.",
+          pause: site.locale === "it" ? "Pausa immagini" : "Pause images",
+          play: site.locale === "it" ? "Riprendi immagini" : "Resume images",
+        }}
+        items={projects.map((project) => ({
+          title: project.title,
+          images: project.photos,
+          fallback: <ProjectArtwork project={project} />,
+        }))}
+        panel={(active, goTo) => {
+          const project = projects[active] ?? projects[0];
+          return project ? (
+            <ProjectDetails project={project} index={active} goTo={goTo} />
+          ) : null;
+        }}
+      />
     </section>
   );
 }
@@ -257,7 +235,7 @@ export function HorizontalProjects() {
 export function MinorProjects() {
   const { t, minorProjects } = useSite();
   return (
-    <section className="mx-auto w-full max-w-[1190px] px-5 md:px-12">
+    <section className="w-full">
       <Reveal>
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">{t.minor.eyebrow}</p>
         <h2 className="mt-2 text-3xl font-bold tracking-tight md:text-4xl">
@@ -267,7 +245,7 @@ export function MinorProjects() {
       <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
         {minorProjects.map((project, i) => (
           <Reveal key={project.title} delay={(i % 2) * 0.08}>
-            <article className="group flex h-full flex-col overflow-hidden rounded-bento border border-white/10 bg-white/[0.025] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-white/20">
+            <article className="group flex h-full flex-col overflow-hidden rounded-bento border border-white/10 bg-white/[0.025] backdrop-blur-xl transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-300 hover:-translate-y-1 hover:border-white/20">
               {project.photo ? (
                 <div className="relative h-44 shrink-0 overflow-hidden">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -283,16 +261,7 @@ export function MinorProjects() {
                   />
                 </div>
               ) : (
-                <div className="relative flex h-44 shrink-0 items-center justify-center overflow-hidden bg-abyss">
-                  <div
-                    aria-hidden
-                    className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(0,163,255,0.22),transparent_60%)]"
-                  />
-                  <Cpu className="relative h-12 w-12 text-primary/70" strokeWidth={1.2} aria-hidden />
-                  <span className="absolute bottom-3 left-4 text-xs font-semibold uppercase tracking-[0.16em] text-muted">
-                    {project.stack[0]}
-                  </span>
-                </div>
+                <div className="h-44 shrink-0 overflow-hidden"><HardwareArtwork /></div>
               )}
 
               <div className="flex flex-1 flex-col p-5">
@@ -321,7 +290,7 @@ export function MinorProjects() {
                         href={project.link.href}
                         target="_blank"
                         rel="noreferrer"
-                        className="ml-auto inline-flex items-center gap-2 rounded-full bg-white px-4 py-1.5 text-xs font-bold text-black transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_22px_rgba(255,255,255,0.3)]"
+                        className="ml-auto inline-flex items-center gap-2 rounded-full bg-white px-4 py-1.5 text-xs font-bold text-black transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_22px_rgba(255,255,255,0.3)]"
                       >
                         <LinkedinIcon className="h-3.5 w-3.5" />
                         {t.minor.linkedin}
@@ -354,6 +323,7 @@ export function MinorProjects() {
 function HandTrackingVisual() {
   const reduce = useReducedMotion();
   const { t } = useSite();
+  const { ref, active } = useActiveAnimation<HTMLDivElement>();
   const bones = [
     "M78 140 L60 118 L48 104 L40 92 L36 84",
     "M78 140 L66 112 L62 84 L60 64 L59 48",
@@ -374,7 +344,8 @@ function HandTrackingVisual() {
   return (
     <div
       aria-hidden
-      className="relative hidden h-60 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-abyss/60 md:flex"
+      ref={ref}
+      className="relative flex h-60 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-abyss/60"
     >
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_55%,rgba(0,163,255,0.18),transparent_65%)]" />
       <svg viewBox="0 0 160 160" className="relative h-52 w-52">
@@ -387,16 +358,17 @@ function HandTrackingVisual() {
           <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r="2.2" fill="#7dd3fc" />
         ))}
       </svg>
-      {!reduce && (
+      {!reduce && active && (
         <motion.span
           className="absolute inset-x-6 h-px bg-gradient-to-r from-transparent via-[#7dd3fc] to-transparent"
-          animate={{ y: [-70, 70, -70], opacity: [0, 0.9, 0] }}
+          animate={{ transform: ["translateY(-70px)", "translateY(70px)", "translateY(-70px)"], opacity: [0, 0.9, 0] }}
           transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
         />
       )}
       <span className="absolute left-3 top-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-faint">
         {t.now.landmarks}
       </span>
+      <span className="absolute bottom-3 right-3 text-[10px] font-medium text-muted">AVFoundation · Vision</span>
     </div>
   );
 }
@@ -407,7 +379,7 @@ function FrancoVisual() {
   return (
     <div
       aria-hidden
-      className="relative hidden h-60 items-center justify-center overflow-hidden rounded-2xl border border-primary/20 bg-[#06111d] md:flex"
+      className="relative flex h-60 items-center justify-center overflow-hidden rounded-2xl border border-primary/20 bg-[#06111d]"
     >
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_60%_35%,rgba(0,163,255,0.22),transparent_62%)]" />
       <svg viewBox="0 0 240 180" className="relative h-52 w-full">
@@ -478,19 +450,14 @@ export function NowBuilding() {
   const { t, nowBuilding } = useSite();
 
   return (
-    <section className="mx-auto w-full max-w-[1190px] px-5 md:px-12">
+    <section className="w-full">
       <Reveal>
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">{t.now.eyebrow}</p>
         <h2 className="mt-2 text-3xl font-bold tracking-tight md:text-4xl">
           {t.now.titleA}{" "}
           <span className="relative inline-block text-primary drop-shadow-[0_0_22px_rgba(0,163,255,0.55)]">
             {t.now.titleB}
-            <motion.span
-              aria-hidden
-              className="absolute -bottom-1 left-0 h-px w-full bg-gradient-to-r from-primary via-[#7dd3fc] to-transparent"
-              animate={{ opacity: [0.35, 1, 0.35] }}
-              transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
-            />
+            <span aria-hidden className="absolute -bottom-1 left-0 h-px w-full bg-primary/60" />
           </span>
         </h2>
       </Reveal>
@@ -539,7 +506,7 @@ export function NowBuilding() {
                         href={project.repo}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-bold text-black transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_24px_rgba(255,255,255,0.25)]"
+                        className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-bold text-black transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_24px_rgba(255,255,255,0.25)]"
                       >
                         <GithubIcon className="h-4 w-4" />
                         {t.featured.github}
@@ -551,7 +518,7 @@ export function NowBuilding() {
                         href={project.link.href}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-2 rounded-full border border-primary/35 bg-primary/10 px-5 py-2.5 text-sm font-bold text-primary transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/15 hover:shadow-[0_0_24px_rgba(0,163,255,0.2)]"
+                        className="inline-flex items-center gap-2 rounded-full border border-primary/35 bg-primary/10 px-5 py-2.5 text-sm font-bold text-primary transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-200 hover:-translate-y-0.5 hover:bg-primary/15 hover:shadow-[0_0_24px_rgba(0,163,255,0.2)]"
                       >
                         {t.now.projectPage}
                         <ArrowUpRight className="h-3.5 w-3.5" />

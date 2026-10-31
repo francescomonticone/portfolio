@@ -1,8 +1,9 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
-import { orbitConfig } from "@/lib/skills3d";
+import { Component, useEffect, useState, type ReactNode } from "react";
+import { useReducedMotion } from "framer-motion";
+import { useActiveAnimation } from "@/lib/use-active-animation";
 import { Eyebrow, Reveal } from "@/components/motion";
 import { useSite } from "@/lib/locale";
 
@@ -19,7 +20,7 @@ const SkillCanvas = dynamic(() => import("./SkillCanvas").then((m) => m.SkillCan
 export function SkillsGrid() {
   const { skillGroups } = useSite();
   return (
-    <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {skillGroups.map((g, i) => (
         <Reveal key={g.title} delay={(i % 4) * 0.08}>
           <div className="h-full rounded-bento border border-line bg-card p-4">
@@ -38,35 +39,52 @@ export function SkillsGrid() {
   );
 }
 
-/* ---------- sezione: 3D su desktop, chip su mobile ---------- */
+class SceneBoundary extends Component<{ children: ReactNode; fallback: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() { return { failed: true }; }
+  render() { return this.state.failed ? this.props.fallback : this.props.children; }
+}
+
 export function SkillsSection() {
-  const { t } = useSite();
-  const [mode, setMode] = useState<"3d" | "grid">("grid");
+  const { t, locale } = useSite();
+  const reduce = useReducedMotion();
+  const { ref, active } = useActiveAnimation<HTMLElement>();
+  const [eligible, setEligible] = useState(false);
+  const [mode, setMode] = useState<"3d" | "grid">("3d");
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const desktop = window.matchMedia("(min-width: 1024px) and (pointer: fine)").matches;
+    const desktop = window.matchMedia("(min-width: 1024px) and (hover: hover) and (pointer: fine)");
     let webgl = false;
+    // Probe once, then release the context rather than leaking a GPU resource.
     try {
-      const c = document.createElement("canvas");
-      webgl = !!(c.getContext("webgl2") || c.getContext("webgl"));
-    } catch {
-      webgl = false;
-    }
-    if (desktop && webgl) setMode("3d");
+      const canvas = document.createElement("canvas");
+      const context = canvas.getContext("webgl2") || canvas.getContext("webgl");
+      webgl = !!context;
+      context?.getExtension("WEBGL_lose_context")?.loseContext();
+    } catch { webgl = false; }
+    const read = () => setEligible(desktop.matches && webgl);
+    read(); desktop.addEventListener("change", read);
+    return () => desktop.removeEventListener("change", read);
   }, []);
+  useEffect(() => { if (active) setReady(true); }, [active]);
+  const show3d = eligible && !reduce && mode === "3d";
 
   return (
-    <section id="skills" className="mt-24 scroll-mt-24">
+    <section ref={ref} id="skills" className="mt-24 scroll-mt-28">
       <Reveal>
         <Eyebrow>{t.skills.eyebrow}</Eyebrow>
-        <h2 className="mt-2 text-4xl font-bold leading-tight tracking-[-1.2px] md:text-[60px] md:leading-[72px]">
-          {t.skills.titleA} <span className="text-[#7dd3fc]">{t.skills.titleB}</span>
-        </h2>
-        <p className="mt-3 max-w-[65ch] text-muted">
-          {t.skills.desc}
-        </p>
+        <div className="mt-2 flex flex-wrap items-end justify-between gap-5">
+          <h2 className="text-4xl font-bold leading-tight tracking-[-.03em] md:text-[60px] md:leading-[72px]">{t.skills.titleA} <span className="text-[#7dd3fc]">{t.skills.titleB}</span></h2>
+          {eligible && !reduce && <div role="group" aria-label={locale === "it" ? "Vista competenze" : "Skills view"} className="flex rounded-full border border-line p-1">
+            {(["3d", "grid"] as const).map(value => <button key={value} type="button" onClick={() => setMode(value)} aria-pressed={mode === value} className={`min-h-11 rounded-full px-4 text-xs font-semibold ${mode === value ? "bg-white/10 text-ink" : "text-muted"}`}>{value === "3d" ? "3D" : locale === "it" ? "Elenco" : "List"}</button>)}
+          </div>}
+        </div>
+        <p className="mt-3 max-w-[65ch] text-muted">{t.skills.desc}</p>
       </Reveal>
-      <div className="mt-8">{mode === "3d" ? <SkillCanvas /> : <SkillsGrid />}</div>
+      <div className="mt-8">
+        {show3d && ready ? <SceneBoundary key={mode} fallback={<SkillsGrid />}><SkillCanvas active={active} /></SceneBoundary> : <SkillsGrid />}
+      </div>
     </section>
   );
 }

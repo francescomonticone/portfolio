@@ -2,10 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --ease-emphasis: cubic-bezier(0.22, 1, 0.36, 1);
-}
-
 html {
   scroll-behavior: smooth;
 }
@@ -36,7 +32,7 @@ body {
   width: max-content;
   animation: marquee-left var(--marquee-duration, 30s) linear infinite;
 }
-.marquee-paused:hover .marquee-track {
+.marquee-paused:hover .marquee-track, .marquee-paused:focus-within .marquee-track {
   animation-play-state: paused;
 }
 
@@ -66,3 +62,74 @@ body {
     scroll-behavior: auto;
   }
 }
+
+:root {
+  color-scheme: dark;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-emphasis: var(--ease-out);
+  scrollbar-color: #414653 #0a0a0f;
+  scrollbar-width: thin;
+}
+body { overflow-wrap: break-word; }
+h1, h2, h3 { text-wrap: balance; }
+input, textarea { caret-color: #7dd3fc; }
+input, textarea, select { font-size: max(16px, 1em); }
+button, a, summary { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+a { text-underline-offset: 4px; }
+:where(a, button, summary, input, textarea, select, [tabindex]):focus-visible {
+  outline: 2px solid #7dd3fc;
+  outline-offset: 4px;
+}
+main:focus { outline: none; }
+.skip-link {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 100;
+  padding: 12px 20px;
+  border-radius: 12px;
+  background: #7dd3fc;
+  color: #07121c;
+  transform: translateY(-160%);
+}
+.skip-link:focus { transform: translateY(0); }
+.nav-link { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 8px 12px; border-radius: 999px; font-size: 13px; font-weight: 500; transition: color 160ms ease, background-color 160ms ease; }
+.icon-button { display: inline-flex; flex-shrink: 0; align-items: center; justify-content: center; width: 44px; height: 44px; border: 1px solid #ffffff1a; border-radius: 999px; color: #d5deea; transition: background-color 160ms ease, color 160ms ease, transform 160ms var(--ease-out); }
+.icon-button:disabled { opacity: .3; cursor: default; }
+.icon-button:active:not(:disabled) { transform: scale(.96); }
+.action-link { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; gap: 8px; transition: background-color 160ms ease, border-color 160ms ease, transform 160ms var(--ease-out); }
+.action-link:active { transform: scale(.98); }
+.mobile-menu summary::-webkit-details-marker { display: none; }
+.mobile-menu .menu-close, .mobile-menu[open] .menu-open { display: none; }
+.mobile-menu[open] .menu-close { display: block; }
+.mobile-menu[open] > div { transform-origin: top right; animation: menu-enter 200ms var(--ease-out); }
+@keyframes menu-enter { from { opacity: 0; transform: translateY(-6px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+.works-stage { isolation: isolate; }
+.project-index-marker { transform-origin: left; transition: transform 200ms var(--ease-out), background-color 160ms ease; }
+.project-index-button[aria-current] .project-index-marker { transform: scaleX(2); background: #7dd3fc; }
+.project-diagram { width: 100%; height: 100%; object-fit: contain; }
+.diagram-signal { stroke-dasharray: 8 18; animation: diagram-flow 3s linear infinite; }
+@keyframes diagram-flow { to { stroke-dashoffset: -104; } }
+.memoji-float { animation: memoji-float 5s var(--ease-in-out) infinite; }
+@keyframes memoji-float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+
+@media (hover: hover) and (pointer: fine) {
+  .nav-link:hover { color: #e4e4e7; background: #ffffff0a; }
+  .icon-button:hover:not(:disabled) { background: #ffffff0a; color: #7dd3fc; }
+  .action-link:hover { transform: translateY(-2px); }
+}
+@media (hover: none), (pointer: coarse) {
+  /* Tailwind v3 hover utilities otherwise leave persistent transforms on touch. */
+  [class*="hover:-translate"], [class*="hover:scale"], [class*="hover:rotate"], [class*="group-hover:scale"] { transform: none; }
+}
+@media (max-width: 380px) {
+  .nav-link { padding-inline: 8px; font-size: 12px; }
+  .icon-button { width: 40px; height: 44px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+  .memoji-float, .diagram-signal, .radar-sweep { animation: none !important; }
+}
+
+@media (max-width: 639px) { .hero-avatar > div { width: 140px !important; height: 140px !important; } }

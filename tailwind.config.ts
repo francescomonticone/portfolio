@@ -10,7 +10,7 @@ const config: Config = {
         carddeep: "#18181b",
         ink: "#e4e4e7",
         muted: "#a1a1aa",
-        faint: "#71717a",
+        faint: "#92929e",
         line: "#27272a",
         primary: "#00a3ff",
         pcyan: "#22d3ee",
